@@ -1,0 +1,399 @@
+.MessageMain {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  overflow-y: hidden;
+}
+.MessageUser {
+  width: 300px;
+  height: 100vh;
+  background-color: rgb(248, 248, 247);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+#Titlesms {
+  text-align: center;
+  padding: 20px 0px 0px 0px;
+  font-weight: 900;
+}
+.filterUser {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0px;
+}
+.UserMain {
+  width: 100%;
+  gap: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.userSelect {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  background-color: rgb(141, 146, 216);
+}
+.userSelectText p:first-child {
+  text-transform: capitalize;
+}
+.userSelect img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: honeydew;
+  object-fit: cover;
+}
+.filterUser input {
+  padding: 5px 10px;
+  border-radius: 10px;
+  width: 100%;
+  height: 50px;
+  text-align: center;
+}
+.MessageWritting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: calc(100% - 300px);
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  position: relative;
+}
+.MessageWrittingHeader {
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  height: 70px;
+  background-color: saddlebrown;
+  position: fixed;
+  top: 0px;
+  z-index: 100;
+}
+.MessageWrittingHeader p {
+  text-transform: capitalize;
+  font-weight: 900;
+}
+.ImageSmsHeader {
+  position: relative;
+}
+.ImageSmsHeader img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: honeydew;
+  object-fit: cover;
+}
+.ImageSmsHeader span {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 15px;
+  height: 15px;
+  background-color: green;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  font-size: 10px;
+}
+.MessageWrittingHome {
+  position: absolute;
+  bottom: 0;
+  z-index: 100;
+  width: 100%;
+  height: 150px;
+  background-color: rgb(141, 146, 216);
+  display: flex;
+  align-items: center;
+}
+.MessageWrittingContainer {
+  width: 100%;
+  height: 100%;
+  max-height: calc(100vh - 220px);
+  margin-top: 70px;
+  padding: 20px 20px;
+  overflow-y: scroll !important;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 10;
+  background-color: rgb(248, 248, 247);
+}
+.MessageWrittingHomeCenter {
+  width: 85%;
+  height: 120px;
+}
+.MessageWrittingHomeCenter textarea {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 20px;
+  resize: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  outline: none;
+}
+.MessageWrittingHomeRight {
+  width: 5%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  cursor: pointer;
+}
+.MessageWrittingHomeLeft {
+  width: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  cursor: pointer;
+}
+/*.ResponseSMS {
+  position: absolute;
+  bottom: 150px;
+  width: 100%;
+  height: auto;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: yellow;
+  padding: 10px 0px;
+  gap: 10px;
+}reponse pour message*/
+.ResponseSMS {
+  position: absolute;
+  bottom: 151px;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  max-height: 200px;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(240, 245, 240);
+  border: 1px solid rgb(141, 146, 216);
+  border-radius: 10px;
+  padding: 10px 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 10px;
+}
+.ResponseSMS img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.UserMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.UserMessageAway {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end !important;
+  width: 100%;
+  gap: 10px;
+}
+.UserMessageText {
+  background-color: rgb(141, 146, 216);
+  padding: 10px 20px;
+  border-radius: 0px 10px 10px 10px;
+  max-width: 70%;
+  max-height: none !important;
+  width: fit-content;
+}
+.UserMessageChargement img,
+.UserMessageChargementAway img {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: rotate 4s linear infinite;
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.UserMessageAwayText {
+  background-color: rgb(216, 141, 141);
+  padding: 10px 20px;
+  border-radius: 10px 0px 10px 10px;
+  max-width: 70%;
+  max-height: none !important; /* Pas de limite de hauteur */
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0;
+}
+#hoursms {
+  text-align: right;
+  font-size: 10px;
+  color: black;
+}
+.UserMessageCopy {
+  background-color: honeydew;
+  padding: 10px;
+  border-radius: 10px;
+}
+#textPrincipal {
+  word-break: break-all;
+  padding: 5px 0px;
+}
+#textPrincipal img {
+  width: 100%;
+  height: 100%;
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: cover;
+}
+.iconeemoji {
+  position: absolute;
+  bottom: 95px;
+  left: -5px;
+  z-index: 200;
+  width: fit-content;
+}
+#readmore {
+  color: honeydew;
+  cursor: pointer;
+}
+#readmore:hover {
+  color: rgb(218, 17, 167);
+}
+.iconefichier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.iconefichier:hover {
+  background-color: rgba(0, 12, 187, 0.24);
+  border-radius: 5px;
+}
+.iconefichier img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: scale-down !important;
+}
+.iconefichier span {
+  font-size: 14px;
+  display: flex;
+}
+.optionbtn {
+  width: 100%;
+  display: flex;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 20px;
+}
+.dialogtext {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px;
+}
+.dialogtext img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pdf-container {
+  width: 100%;
+  height: 100%; /* Taille fixe ou ajustable */
+  min-height: 500px;
+  border-radius: 5px;
+  overflow: auto;
+}
+
+/* Style spécifique pour l'iframe PDF */
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Modifiez aussi les styles généraux des iframes */
+.dialogtext iframe {
+  width: 100%;
+  height: 100%; /* Hauteur minimum pour les documents */
+  min-height: 500px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+.customdialog {
+  width: 100% !important;
+  height: 100% !important;
+}
+/*barre de progression*/
+.upload-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-percentage {
+  font-size: 12px;
+  font-weight: bold;
+  color: #4caf50;
+  min-width: 30px;
+  text-align: right;
+}
+
+.upload-details {
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  color: #666;
+}
+
+.file-size {
+  font-weight: 500;
+}
+
+.upload-speed {
+  color: #2196f3;
+  font-style: italic;
+}

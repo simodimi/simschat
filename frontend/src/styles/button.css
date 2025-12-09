@@ -1,0 +1,30 @@
+.btnbutton {
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btnbutton.rejectbtn {
+  background-color: red;
+}
+.btnbutton.acceptbtn {
+  background-color: green;
+}
+.btnbutton.retourbtn {
+  background-color: blue;
+}
+
+.btnbutton.acceptbtn:hover {
+  background-color: darkgreen;
+}
+.btnbutton.retourbtn:hover {
+  background-color: darkblue;
+}
+
+.btnbutton.rejectbtn:hover {
+  background-color: darkred;
+}

@@ -1,0 +1,111 @@
+.SiderbarMain {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+  padding: 30px 0px;
+  width: 100%;
+  background-color: rgb(226, 223, 216);
+}
+.SiderbarUp,
+.SiderbarDown {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+.SiderbarTop {
+  position: relative;
+  width: 100%;
+  padding: 5px 0px;
+}
+.SiderbarTop.active {
+  background-color: rgb(141, 146, 216); /*goldenrod;*/
+}
+.SiderbarTopOption {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  width: fit-content;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.SiderbarTopOption p {
+  color: black;
+}
+.SiderbarTopOption img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+.logo {
+  width: 100%;
+}
+.logo img {
+  width: 100%;
+  object-fit: cover;
+}
+.SiderbarTopOptionNumber {
+  position: absolute;
+  top: 0;
+  right: -20px;
+  background-color: green;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center !important;
+  align-items: center !important;
+  color: white;
+  font-size: 10px;
+}
+.SiderbarTopOptionNumber span {
+  text-align: center;
+  padding: 0;
+  margin: 0;
+}
+.SiderbarTopOptionNumbers {
+  position: absolute;
+  top: 5px;
+  right: -10px;
+  background-color: green;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  font-size: 10px;
+}
+#texthover {
+  position: absolute;
+  top: -20px;
+  font-size: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: black;
+  opacity: 0;
+}
+.SiderbarTop:hover #texthover {
+  opacity: 1 !important;
+  animation: style 0.2s ease-in-out;
+}
+@keyframes style {
+  0% {
+    top: -15px;
+  }
+  100% {
+    top: -20px;
+  }
+}
+.SiderbarTop:hover {
+  background-color: rgb(122, 126, 175); /*#b99a45 !important;*/
+}
+a {
+  text-decoration: none !important;
+}

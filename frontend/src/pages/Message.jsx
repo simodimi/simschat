@@ -87,7 +87,14 @@ const Message = () => {
   const [textesms, settextesms] = useState("");
   const [showfulltext, setshowfulltext] = useState(false);
   const [selectedmedia, setSelectedmedia] = useState(null);
+  const [copymedia, setcopymedia] = useState(null);
+  const [messageToReply, setMessageToReply] = useState(null);
   const [showsablier, setshowsablier] = useState(false);
+  const [selectUser, setselectUser] = useState(null);
+  const [selectUserName, setselectUserName] = useState(null);
+  const scrollcopy = useRef({});
+  const [viewOption, setViewOption] = useState(null);
+  const refhide = useRef(null);
   //progression de l'envoie du sms
   const [uploadingMessages, setUploadingMessages] = useState({});
   const [uploadProgress, setUploadProgress] = useState({});
@@ -104,14 +111,29 @@ const Message = () => {
     datesms: "",
     mediasms: null,
   });
-  const [usertableau, setusertableau] = useState([]);
+  const [usertableau, setusertableau] = useState({});
+  //recuperation des sms des user
+  const currentMessages = usertableau[selectUser] || [];
   const ref = useRef(null);
   const refmedia = useRef(null);
   const refpicker = useRef(null);
+  const refslider = useRef(null);
   const uploadTimersRef = useRef({});
   const handlechangeMedia = (e) => {
     refmedia.current.click();
   };
+  useEffect(() => {
+    const handlecloseOption = (e) => {
+      if (refhide.current && !refhide.current.contains(e.target)) {
+        setViewOption(null);
+      }
+    };
+    document.addEventListener("mousedown", handlecloseOption);
+    return () => {
+      document.removeEventListener("mousedown", handlecloseOption);
+    };
+  }, []);
+
   useEffect(() => {
     const handleoutside = (e) => {
       if (refpicker.current && !refpicker.current.contains(e.target)) {
@@ -205,7 +227,7 @@ const Message = () => {
         if (file.size <= 5 * 1024 * 1024) {
           const messageId =
             Date.now() + "-" + Math.random().toString(36).substring(2, 9);
-          simulateFileUpload(file, messageId);
+          //simulateFileUpload(file, messageId);
           const reader = new FileReader();
           reader.onloadend = () => {
             const data = reader.result;
@@ -216,13 +238,19 @@ const Message = () => {
               textsms: "",
               datesms: `${hours}:${minutes}`,
               mediasms: "",
+              medianame: file.name,
+              mediatype: file.type,
+              mediasize: file.size,
               isUploading: true,
             };
             console.log(newSms);
-            setusertableau([...usertableau, newSms]);
+            setusertableau((prev) => ({
+              ...prev,
+              [selectUser]: [...(prev[selectUser] || []), newSms],
+            }));
             // Activer le sablier et initialiser la progression
-            setUploadingMessages((prev) => ({ ...prev, [messageId]: true }));
-            setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
+            // setUploadingMessages((prev) => ({ ...prev, [messageId]: true);
+            // setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
           };
           reader.readAsDataURL(file);
         } else {
@@ -286,10 +314,13 @@ const Message = () => {
             newtab.push(newSms); //ajoutons newsms dans un nouveau tableau
             if (newtab.length === files.length) {
               console.log(newSms);
-              setusertableau([...usertableau, ...newtab]);
+              setusertableau((prev) => ({
+                ...prev,
+                [selectUser]: [...(prev[selectUser] || []), ...newtab],
+              }));
               // Activer le sablier et initialiser la progression
-              setUploadingMessages((prev) => ({ ...prev, [messageId]: true }));
-              setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
+              //setUploadingMessages((prev) => ({ ...prev, [messageId]: true }));
+              //setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
             }
           };
           reader.readAsDataURL(file);
@@ -316,9 +347,30 @@ const Message = () => {
         textsms: valuesms,
         datesms: `${hours}:${minutes}`,
         mediasms: "",
+        replyTo: messageToReply
+          ? {
+              id: messageToReply.id,
+              username: messageToReply.username,
+              picturesmsuser: messageToReply.picturesmsuser,
+              textsms: messageToReply.textsms,
+              mediaicon: messageToReply.mediaicon,
+              mediaName: messageToReply.medianame,
+              mediaType: messageToReply.mediatype,
+              mediaSize: messageToReply.mediasize,
+              mediasms: messageToReply.mediasms,
+            }
+          : null,
+        mediacopy: "",
+        isCopy: true,
       };
-      setusertableau([...usertableau, newSms]);
+
+      setusertableau((prev) => ({
+        ...prev,
+        [selectUser]: [...(prev[selectUser] || []), newSms],
+      }));
       setvaluesms("");
+      setMessageToReply(null);
+      setcopymedia(null);
       setShowEmojiPicker(false);
     }
   };
@@ -350,6 +402,60 @@ const Message = () => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
+  //supprimer message
+  const handledelete = (id) => {
+    setusertableau((prev) => ({
+      ...prev,
+      [selectUser]: (prev[selectUser] || []).map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              textsms: "message supprimé",
+              mediasms: "",
+              picturesmsuser: "",
+              isDeleted: "true",
+            }
+          : p
+      ),
+    }));
+  };
+  //copier le message
+  const handlecopy = (p) => {
+    setcopymedia(p);
+    setMessageToReply(p);
+  };
+  const handletoggle = (p) => {
+    setselectUser(p);
+  };
+  const handleselectionUser = (p) => {
+    setselectUserName(p);
+  };
+  //scroll vers le message copié
+  const handlescrollCopy = (id) => {
+    const scroll = scrollcopy.current[id];
+    if (scroll) {
+      scroll.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+  useEffect(() => {
+    localStorage.setItem("usertableau", JSON.stringify(usertableau));
+  }, [usertableau]);
+  useEffect(() => {
+    const data = localStorage.getItem("usertableau");
+    if (data) {
+      setusertableau(JSON.parse(data));
+    }
+  }, []);
+  const handlerightclick = (id) => {
+    setViewOption((prev) => (prev === id ? null : id));
+  };
+  useEffect(() => {
+    if (refslider.current) {
+      //refslider.current.scrollTop = refslider.current.scrollHeight;
+      refslider.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [usertableau[selectUser]]);
+
   return (
     <div className="MessageMain">
       <div className="MessageUser">
@@ -366,63 +472,132 @@ const Message = () => {
         </div>
         <div className="UserMain">
           {users.map((p) => (
-            <div className="userSelect" key={p.id}>
+            <div
+              className={`userSelect ${selectUser === p.id ? "active" : ""}`}
+              key={p.id}
+              onClick={() => {
+                handleselectionUser(p);
+                handletoggle(p.id);
+              }}
+            >
               <img src={p.image} alt="" />
               <div className="userSelectText">
                 <p>{p.name}</p>
-                <p>
-                  {p.text.length > 28
-                    ? `${p.text.slice(0, 28) + "..."}`
-                    : p.text}
-                </p>
+                {usertableau[p.id] && usertableau[p.id].length > 0
+                  ? (usertableau[p.id][usertableau[p.id].length - 1].textsms
+                      .length > 28
+                      ? `${usertableau[p.id][
+                          usertableau[p.id].length - 1
+                        ].textsms.slice(0, 28)}...`
+                      : `${
+                          usertableau[p.id][usertableau[p.id].length - 1]
+                            .textsms
+                        }`) ||
+                    (usertableau[p.id][usertableau[p.id].length - 1].medianame
+                      .length > 28
+                      ? `${usertableau[p.id][
+                          usertableau[p.id].length - 1
+                        ].medianame.slice(0, 28)}...`
+                      : `${
+                          usertableau[p.id][usertableau[p.id].length - 1]
+                            .medianame
+                        }`)
+                  : "Aucun message"}
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="MessageWritting">
-        <div className="MessageWrittingHeader">
-          <div className="ImageSmsHeader">
-            <img src={img} alt="" />
-            <span></span>
-          </div>
-          <p>dimitri</p>
-        </div>
-        <div className="MessageWrittingContainer">
-          {usertableau.map((p) => (
-            <div className="UserMessage" key={p.id}>
-              <div className="UserMessageText">
-                <p id="textPrincipal">
-                  {p.picturesmsuser && <img src={p.picturesmsuser} alt="" />}
-                  {p.mediasms && (
+      {selectUserName ? (
+        <div className="MessageWritting">
+          {selectUserName && (
+            <div className="MessageWrittingHeader">
+              <div className="ImageSmsHeader">
+                <img src={selectUserName.image} alt="" />
+                <span></span>
+              </div>
+              <p>{selectUserName.name}</p>
+            </div>
+          )}
+          <div className="MessageWrittingContainer">
+            {currentMessages.map((p) => (
+              <div className="UserMessage" key={p.id}>
+                <div
+                  className="UserMessageText"
+                  onClick={() => handlerightclick(p.id)}
+                >
+                  {p.replyTo && (
                     <div
-                      className="iconefichier"
-                      onClick={() => handleOpenDialog(p)}
+                      className="UserMessageCopy"
+                      onClick={() => handlescrollCopy(p.replyTo.id)}
                     >
-                      <img src={p.mediaicon} alt="" />
+                      <p>Pouya / vous</p>
                       <span>
-                        {p.medianame.length > 35
-                          ? `${p.medianame.slice(0, 35)}...`
-                          : p.medianame}{" "}
-                        {(p.mediasize / (1024 * 1024)).toFixed(2)} MB
+                        {p.replyTo.textsms.length > 50
+                          ? `${p.replyTo.textesms.slice(0, 50)}...`
+                          : `${p.replyTo.textsms}`}
                       </span>
+                      <img src={p.replyTo.picturesmsuser} alt="" />
+                      {p.replyTo.mediasms && (
+                        <div className="iconefichier">
+                          <img src={p.replyTo.mediaicon} alt="" />
+                          <span>
+                            {p.replyTo.mediaName?.length > 50
+                              ? `${p.replyTo.mediaName.slice(0, 50)}...`
+                              : `${p.replyTo.mediaName}`}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
-                  {showfulltext || p.textsms.length <= 2000
-                    ? p.textsms
-                    : p.textsms.slice(0, 2000)}
-                  {p.textsms.length > 2000 && (
-                    <span
-                      id="readmore"
-                      onClick={() => setshowfulltext(!showfulltext)}
-                    >
-                      {showfulltext ? " voir moins" : " ... lire la suite"}
-                    </span>
-                  )}
-                </p>
-                <p id="hoursms">{p.datesms}</p>
-              </div>
-              {/*uploadingMessages[p.id] && (
+                  <p
+                    id="textPrincipal"
+                    ref={(el) => (scrollcopy.current[p.id] = el)}
+                  >
+                    {p.picturesmsuser && <img src={p.picturesmsuser} alt="" />}
+                    {p.mediasms && (
+                      <div
+                        className="iconefichier"
+                        onClick={() => handleOpenDialog(p)}
+                      >
+                        <img src={p.mediaicon} alt="" />
+                        <span>
+                          {p.medianame.length > 35
+                            ? `${p.medianame.slice(0, 35)}...`
+                            : p.medianame}{" "}
+                          {(p.mediasize / (1024 * 1024)).toFixed(2)} MB
+                        </span>
+                      </div>
+                    )}
+                    {showfulltext || p.textsms.length <= 2000
+                      ? p.textsms
+                      : p.textsms.slice(0, 2000)}
+                    {p.textsms.length > 2000 && (
+                      <span
+                        id="readmore"
+                        onClick={() => setshowfulltext(!showfulltext)}
+                      >
+                        {showfulltext ? " voir moins" : " ... lire la suite"}
+                      </span>
+                    )}
+                  </p>
+                  <p id="hoursms">{p.datesms}</p>
+                </div>
+                {viewOption === p.id && (
+                  <div className="optionDetailSms" ref={refhide}>
+                    <p onClick={() => handlecopy(p)}>répondre message</p>
+                    {!p.isDeleted && (
+                      <p onClick={() => handledelete(p.id)}>
+                        supprimer message
+                      </p>
+                    )}
+                    {p.mediatype && !p.isDeleted && (
+                      <p onClick={() => handleOpenDialog(p)}>voir média</p>
+                    )}
+                  </div>
+                )}
+
+                {/*uploadingMessages[p.id] && (
                 <div className="">
                   <div className="UserMessageChargement">
                     <img src={sablier} alt="" />
@@ -452,10 +627,10 @@ const Message = () => {
                   </div>
                 </div>
               )*/}
-            </div>
-          ))}
-
-          {/* <div className="UserMessage">
+              </div>
+            ))}
+            <div className="" ref={refslider}></div>
+            {/* <div className="UserMessage">
             <div className="UserMessageText">
               <div className="UserMessageCopy">
                 <p>Pouya / vous</p>
@@ -536,51 +711,81 @@ const Message = () => {
               <p id="hoursms">18:00</p>
             </div>
           </div> */}
-        </div>
-        <div className="ResponseSMS">
-          {/*<p>vous allez bien monsieur?</p>*/}
-          <img src={img} alt="" />
-          <button>X</button>
-        </div>
-        <div className="MessageWrittingHome">
-          <div className="MessageWrittingHomeLeft">
-            <div className="SiderbarTop" ref={refpicker}>
-              <div className="SiderbarTopOption">
-                <div className="iconeemoji">
-                  {showEmojiPicker && (
-                    <Emojis handleEmojiSelect={handleEmojiSelect} />
-                  )}
+          </div>
+          {copymedia && (
+            <div className="ResponseSMS">
+              {copymedia.textsms && (
+                <div className="ResponseSMSText">
+                  <p>
+                    {copymedia.textsms.length > 200
+                      ? copymedia.textsms.slice(0, 200) + "..."
+                      : copymedia.textsms}
+                  </p>
+                  <button onClick={() => setcopymedia(null)}>X</button>
                 </div>
-                <img src={img1} alt="" onClick={handleicone} />
-              </div>
-              <p id="texthover">icône</p>
+              )}{" "}
+              {(copymedia.picturesmsuser ||
+                copymedia.mediasms ||
+                copymedia.mediaicon) && (
+                <div className="ResponseSMSImage">
+                  <span>
+                    {copymedia.medianame.length > 20
+                      ? copymedia.medianame.slice(0, 20) + "..."
+                      : copymedia.medianame}
+                  </span>
+                  <img
+                    src={
+                      copymedia.picturesmsuser ||
+                      (copymedia.mediatype?.startsWith("image/")
+                        ? copymedia.mediasms
+                        : copymedia.mediaicon)
+                    }
+                    alt=""
+                  />
+                  <button onClick={() => setcopymedia(null)}>X</button>
+                </div>
+              )}
             </div>
-            <div className="SiderbarTop">
-              <div className="SiderbarTopOption">
-                <input
-                  type="file"
-                  name="picturesmsuser"
-                  id=""
-                  style={{ display: "none" }}
-                  value={UserHomeSms.picturesmsuser}
-                  onChange={handleupdate}
-                  ref={ref}
-                  accept="image/*"
-                />
-                <img src={img2} alt="" onClick={handlechangePhoto} />
+          )}
+          <div className="MessageWrittingHome">
+            <div className="MessageWrittingHomeLeft">
+              <div className="SiderbarTop" ref={refpicker}>
+                <div className="SiderbarTopOption">
+                  <div className="iconeemoji">
+                    {showEmojiPicker && (
+                      <Emojis handleEmojiSelect={handleEmojiSelect} />
+                    )}
+                  </div>
+                  <img src={img1} alt="" onClick={handleicone} />
+                </div>
+                <p id="texthover">icône</p>
               </div>
-              <p id="texthover">photos</p>
-            </div>
-            <div className="SiderbarTop">
-              <div className="SiderbarTopOption">
-                <input
-                  ref={refmedia}
-                  type="file"
-                  name="mediasms"
-                  value={UserHomeSms.mediasms}
-                  id=""
-                  onChange={handleupdate}
-                  accept="
+              <div className="SiderbarTop">
+                <div className="SiderbarTopOption">
+                  <input
+                    type="file"
+                    name="picturesmsuser"
+                    id=""
+                    style={{ display: "none" }}
+                    value={UserHomeSms.picturesmsuser}
+                    onChange={handleupdate}
+                    ref={ref}
+                    accept="image/*"
+                  />
+                  <img src={img2} alt="" onClick={handlechangePhoto} />
+                </div>
+                <p id="texthover">photos</p>
+              </div>
+              <div className="SiderbarTop">
+                <div className="SiderbarTopOption">
+                  <input
+                    ref={refmedia}
+                    type="file"
+                    name="mediasms"
+                    value={UserHomeSms.mediasms}
+                    id=""
+                    onChange={handleupdate}
+                    accept="
                   image/*,
                   video/*,
                   application/pdf,
@@ -593,38 +798,47 @@ const Message = () => {
                   application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
                   application/vnd.oasis.opendocument.text
                 "
-                  style={{ display: "none" }}
-                  multiple
-                ></input>
-                <img src={img4} alt="" onClick={handlechangeMedia} />
+                    style={{ display: "none" }}
+                    multiple
+                  ></input>
+                  <img src={img4} alt="" onClick={handlechangeMedia} />
+                </div>
+                <p id="texthover">médias</p>
               </div>
-              <p id="texthover">médias</p>
             </div>
-          </div>
-          <div className="MessageWrittingHomeCenter">
-            <textarea
-              id=""
-              value={valuesms}
-              onChange={handleupdating}
-              spellCheck="true"
-            ></textarea>
-          </div>
-          <div className="MessageWrittingHomeRight">
-            <div className="SiderbarTop">
-              <div className="SiderbarTopOption">
-                <img src={img3} alt="" onClick={handlesendsms} />
+            <div className="MessageWrittingHomeCenter">
+              <textarea
+                id=""
+                value={valuesms}
+                onChange={handleupdating}
+                spellCheck="true"
+              ></textarea>
+            </div>
+            <div className="MessageWrittingHomeRight">
+              <div className="SiderbarTop">
+                <div className="SiderbarTopOption">
+                  <img src={img3} alt="" onClick={handlesendsms} />
+                </div>
+                <p id="texthover">Envoyer</p>
               </div>
-              <p id="texthover">Envoyer</p>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="noSelection">
+          <p>Hello,veuillez choisir un ami pour débuter la conversation.</p>
+        </div>
+      )}
+
       {open10 && selectedmedia && (
         <Dialog open={open10} onClose={handleClose} className="customdialog">
           <DialogContent>
             <DialogContentText className="dialogtext">
               {selectedmedia.mediatype.startsWith("image/") && (
                 <img src={selectedmedia.mediasms} alt="" />
+              )}
+              {selectedmedia.picturesmsuser && (
+                <img src={selectedmedia.picturesmsuser} alt="" />
               )}
               {selectedmedia.mediatype.startsWith("video/") && (
                 <video src={selectedmedia.mediasms} controls width={"100%"} />

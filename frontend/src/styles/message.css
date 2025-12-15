@@ -37,6 +37,12 @@
   border-radius: 10px;
   background-color: rgb(141, 146, 216);
 }
+.userSelect:hover {
+  background-color: rgb(100, 105, 175);
+}
+.userSelect.active {
+  background-color: rgb(100, 105, 175);
+}
 .userSelectText p:first-child {
   text-transform: capitalize;
 }
@@ -160,7 +166,8 @@
   font-size: 20px;
   cursor: pointer;
 }
-/*.ResponseSMS {
+
+.ResponseSMSText {
   position: absolute;
   bottom: 150px;
   width: 100%;
@@ -169,38 +176,77 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: yellow;
   padding: 10px 0px;
   gap: 10px;
-}reponse pour message*/
-.ResponseSMS {
+  background-color: yellow;
+}
+.ResponseSMSImage {
   position: absolute;
+  bottom: 151px;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0px;
+  gap: 10px;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  max-height: 200px;
+  background-color: rgb(240, 245, 240);
+  border: 1px solid rgb(141, 146, 216);
+  border-radius: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ResponseSMSImage button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+}
+/*.ResponseSMS {
+  position: absolute;//
   bottom: 151px;
   width: 100%;
   max-width: 150px;
   height: auto;
   max-height: 200px;
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  z-index: 100;//
+  display: flex;//
+  justify-content: center;//
+  align-items: center;//
   background-color: rgb(240, 245, 240);
   border: 1px solid rgb(141, 146, 216);
   border-radius: 10px;
-  padding: 10px 0px;
+  padding: 10px 0px;//
   left: 50%;
   transform: translateX(-50%);
-  gap: 10px;
-}
+  gap: 10px;//
+}reponse pour message*/
 .ResponseSMS img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+.ResponseSMSImage span {
+  position: absolute;
+  top: -15px;
+  background-color: rgb(141, 146, 216);
+  width: 100%;
+  text-align: center;
+  text-wrap: nowrap;
+}
 .UserMessage {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.UserMessageCopy img {
+  width: auto;
+  height: auto;
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: cover;
 }
 .UserMessageAway {
   display: flex;
@@ -252,6 +298,7 @@
   background-color: honeydew;
   padding: 10px;
   border-radius: 10px;
+  cursor: pointer;
 }
 #textPrincipal {
   word-break: break-all;
@@ -396,4 +443,38 @@
 .upload-speed {
   color: #2196f3;
   font-style: italic;
+}
+.optionDetailSms {
+  width: fit-content;
+  background-color: rgb(141, 146, 216);
+  height: auto;
+  padding: 10px 0px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.optionDetailSms p {
+  padding: 5px 20px;
+}
+.optionDetailSms p:hover {
+  background-color: #4caf50;
+  cursor: pointer;
+}
+.iconefichier img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: scale-down !important;
+}
+.noSelection {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.noSelection p {
+  font-size: 30px;
+  font-weight: 900;
+  color: gray;
 }

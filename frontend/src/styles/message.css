@@ -127,13 +127,15 @@
   max-height: calc(100vh - 220px);
   margin-top: 70px;
   padding: 20px 20px;
-  overflow-y: scroll !important;
+  overflow-y: auto !important;
   scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   gap: 15px;
   z-index: 10;
-  background-color: rgb(248, 248, 247);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 .MessageWrittingHomeCenter {
   width: 85%;
@@ -238,7 +240,7 @@
 }
 .UserMessage {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
 }
 .UserMessageCopy img {

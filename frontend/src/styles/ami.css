@@ -1,0 +1,170 @@
+.MessageWrittingHeaders {
+  width: 100%;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  height: auto;
+  background-color: saddlebrown;
+}
+.UserAwayDescription {
+  height: auto;
+}
+.UserAwayDescriptionHeader {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+}
+.UserAwayDescriptionHeaderName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.SiderbarTops {
+  position: relative;
+  width: 100%;
+}
+#texthovers {
+  position: absolute;
+  top: -10px;
+  font-size: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: black;
+  opacity: 0;
+  text-wrap: nowrap;
+}
+.UserAwayDescriptionHeaderName {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.SiderbarTops:hover #texthovers {
+  opacity: 1 !important;
+  animation: style 0.2s ease-in-out;
+}
+@keyframes style {
+  0% {
+    top: -15px;
+  }
+  100% {
+    top: -10px;
+  }
+}
+.optionSentence {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 20px;
+  background-color: yellowgreen;
+}
+.optionSentence p {
+  cursor: pointer;
+  background-color: aqua;
+  border-radius: 5px;
+  padding: 10px 20px;
+}
+.optionSentence p:hover {
+  background-color: darkcyan;
+}
+.Amity {
+  margin-top: 0px;
+  width: 100%;
+}
+#headerReceive {
+  text-align: center;
+  width: 100%;
+  padding: 10px 0px;
+}
+.AmityReceiveUser {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.AmityReceiveUser p {
+  text-transform: capitalize;
+  font-weight: 900;
+}
+.userSelects {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  background-color: rgb(141, 146, 216);
+}
+.userSelects:hover {
+  background-color: rgb(100, 105, 175);
+}
+.userSelects.active {
+  background-color: rgb(100, 105, 175);
+}
+.userSelectTexts p:first-child {
+  text-transform: capitalize;
+}
+.userSelects img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: honeydew;
+  object-fit: cover;
+}
+.AmityReceiveButton {
+  display: flex;
+  gap: 50px;
+  align-items: center;
+}
+.Amitysend {
+  margin-top: 20px;
+}
+#searchAmity {
+  text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+  padding: 20px 0px;
+  text-transform: capitalize;
+}
+.btncreate {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.headerStepper {
+  width: 70vw !important;
+  height: 70vh !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: auto;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+}
+.headerStepper .MuiDialog-container .MuiPaper-root {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+#inputNameGroupe {
+  width: 400px;
+  height: 100px;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 20px;
+}
+.groupeselectionUser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgb(141, 146, 216);
+}

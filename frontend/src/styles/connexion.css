@@ -1,0 +1,91 @@
+.headerConnect {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  background-color: rgb(248, 248, 247);
+  margin: auto;
+}
+.MainConnectTitle p {
+  font-weight: 500;
+  font-size: 20px;
+}
+.MainConnectTitle input {
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 1px solid rgb(141, 146, 216);
+  height: 50px;
+}
+.MainConnect {
+  width: 600px;
+  height: auto;
+  background-color: aqua;
+  padding: 20px 30px;
+  border-radius: 10px;
+}
+.MainConnect form {
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+#erreur {
+  text-align: center;
+}
+h4 {
+  text-align: center;
+  padding: 10px 0;
+  font-weight: 900;
+  font-size: 20px;
+}
+.btnConnect {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.mainConnectLogo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 20px 0px;
+}
+.mainConnectLogo img {
+  width: 90px;
+  height: 70px;
+  object-fit: cover;
+}
+.linkconnexion {
+  padding-top: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.linkconnexion a {
+  text-decoration: none;
+  color: palevioletred;
+}
+.MainConnectTitle img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: honeydew;
+  object-fit: scale-down;
+  cursor: pointer;
+}
+.buttonstepper {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+#spantexte {
+  display: flex;
+  padding: 10px 0px;
+}

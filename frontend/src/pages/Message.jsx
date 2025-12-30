@@ -18,7 +18,8 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import Button from "../containers/Button.jsx";
-const Message = () => {
+import imgbk from "../assets/background/neige.jpg";
+const Message = ({ choicebk, adduser, clickuser }) => {
   const user = [
     { id: 1, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
     {
@@ -36,71 +37,31 @@ const Message = () => {
       text: "bonjour dimitri,tu vas bien?",
       date: "10/12/2022",
     },
-    { id: 5, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
-    {
-      id: 6,
-      name: "dimitri",
-      image: img,
-      text: "bonjour dimitri,tu vas bien?",
-      date: "10/12/2022",
-    },
-    { id: 7, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
-    {
-      id: 8,
-      name: "dimitri",
-      image: img,
-      text: "bonjour dimitri,tu vas bien?",
-      date: "10/12/2022",
-    },
-    { id: 9, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
-    {
-      id: 10,
-      name: "dimitri",
-      image: img,
-      text: "bonjour dimitri,tu vas bien?",
-      date: "10/12/2022",
-    },
-    { id: 11, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
-    {
-      id: 12,
-      name: "dimitri",
-      image: img,
-      text: "bonjour dimitri,tu vas bien?",
-      date: "10/12/2022",
-    },
-    { id: 13, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
-    {
-      id: 14,
-      name: "dimitri",
-      image: img,
-      text: "bonjour dimitri,tu vas bien?",
-      date: "10/12/2022",
-    },
   ];
   const [open10, setOpen10] = useState(false);
   const [textsearch, settextsearch] = useState("");
   const [users, setusers] = useState(user);
-  const [test, settext] = useState(null);
+  // const [test, settext] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [imagemedia, setimagemedia] = useState(null);
+  //const [imagemedia, setimagemedia] = useState(null);
   const [valuesms, setvaluesms] = useState("");
-  const [textesms, settextesms] = useState("");
+  //const [textesms, settextesms] = useState("");
   const [showfulltext, setshowfulltext] = useState(false);
   const [selectedmedia, setSelectedmedia] = useState(null);
   const [copymedia, setcopymedia] = useState(null);
   const [messageToReply, setMessageToReply] = useState(null);
-  const [showsablier, setshowsablier] = useState(false);
+  //const [showsablier, setshowsablier] = useState(false);
   const [selectUser, setselectUser] = useState(null);
   const [selectUserName, setselectUserName] = useState(null);
   const scrollcopy = useRef({});
   const [viewOption, setViewOption] = useState(null);
   const refhide = useRef(null);
   //progression de l'envoie du sms
-  const [uploadingMessages, setUploadingMessages] = useState({});
-  const [uploadProgress, setUploadProgress] = useState({});
-  const [uploadSpeeds, setUploadSpeeds] = useState({});
+  //const [uploadingMessages, setUploadingMessages] = useState({});
+  //const [uploadProgress, setUploadProgress] = useState({});
+  //const [uploadSpeeds, setUploadSpeeds] = useState({});
   const local = new Date().toISOString(); //heure gmt
-  const datelocal = new Date(local);
+  const datelocal = new Date(local); //convertir en heure local
   const hours = datelocal.getHours().toString().padStart(2, "0");
   const minutes = datelocal.getMinutes().toString().padStart(2, "0");
   const [UserHomeSms, setUserHomeSms] = useState({
@@ -113,12 +74,12 @@ const Message = () => {
   });
   const [usertableau, setusertableau] = useState({});
   //recuperation des sms des user
-  const currentMessages = usertableau[selectUser] || [];
+  const currentMessages = usertableau[selectUser] || []; //on recupere les sms de l'user selectUser dans le tableau usertableau
   const ref = useRef(null);
   const refmedia = useRef(null);
   const refpicker = useRef(null);
   const refslider = useRef(null);
-  const uploadTimersRef = useRef({});
+  // const uploadTimersRef = useRef({});
   const handlechangeMedia = (e) => {
     refmedia.current.click();
   };
@@ -145,7 +106,7 @@ const Message = () => {
       document.removeEventListener("mousedown", handleoutside);
     };
   }, []);
-  //nettoyer les timers lors du démontage du composant
+  /* //nettoyer les timers lors du démontage du composant
   useEffect(() => {
     return () => {
       //transformations de l'objet en tableau
@@ -155,7 +116,7 @@ const Message = () => {
     };
   }, []);
   //gestion de la progression de l'envoie des sms
-  const simulateFileUpload = (file, messageId) => {
+   const simulateFileUpload = (file, messageId) => {
     //calcul du temps d'uploads
     const tailleMo = (file.size / (1024 * 1024)).toFixed(2);
     //vitesse d'upload
@@ -202,11 +163,11 @@ const Message = () => {
     uploadTimersRef.current[messageId] = { clear: () => clearInterval(timer) };
 
     return tempsTotalMs;
-  };
+  };*/
 
   const handlechange = (e) => {
     const value = e.target.value;
-    settextsearch(value);
+    settextsearch(value); //mise a jour de la recherche
     if (value.length > 0 && value.trim() !== "") {
       const filter = users.filter((p) =>
         p.name.toLowerCase().includes(value.toLowerCase())
@@ -228,38 +189,36 @@ const Message = () => {
           const messageId =
             Date.now() + "-" + Math.random().toString(36).substring(2, 9);
           //simulateFileUpload(file, messageId);
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const data = reader.result;
-            const newSms = {
-              id: messageId,
-              username: "",
-              picturesmsuser: data,
-              textsms: "",
-              datesms: `${hours}:${minutes}`,
-              mediasms: "",
-              medianame: file.name,
-              mediatype: file.type,
-              mediasize: file.size,
-              isUploading: true,
-            };
-            console.log(newSms);
-            setusertableau((prev) => ({
-              ...prev,
-              [selectUser]: [...(prev[selectUser] || []), newSms],
-            }));
-            // Activer le sablier et initialiser la progression
-            // setUploadingMessages((prev) => ({ ...prev, [messageId]: true);
-            // setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
+          const reader = URL.createObjectURL(file);
+          const newSms = {
+            id: messageId,
+            username: "",
+            picturesmsuser: reader,
+            textsms: "",
+            datesms: `${hours}:${minutes}`,
+            mediasms: "",
+            medianame: file.name,
+            mediatype: file.type,
+            mediasize: file.size,
+            isUploading: true,
+            time: Date.now(),
           };
-          reader.readAsDataURL(file);
+
+          //mettre à jour usertableau en gardant tout ce qui était avant,puis pour chaque user ajouter les nouveaux sms(newsms) à ceux qui sont deja dans le tableau
+          setusertableau((prev) => ({
+            ...prev,
+            [selectUser]: [...(prev[selectUser] || []), newSms],
+          }));
+          // Activer le sablier et initialiser la progression
+          // setUploadingMessages((prev) => ({ ...prev, [messageId]: true);
+          // setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
         } else {
           alert("la taille de l'image ne doit pas dépasser 5 Mo");
         }
       }
     }
     if (e.target.name === "mediasms") {
-      const files = Array.from(e.target.files);
+      const files = Array.from(e.target.files); //transformer les fichiers en tableau
       if (!files) {
         return;
       }
@@ -286,7 +245,7 @@ const Message = () => {
               "text/plain",
               "text/csv",
               "application/json",
-            ].includes(file.type)
+            ].includes(file.type) //verifier si le type de file est dans la liste
           ) {
             fileIcon = fichier;
           } else {
@@ -294,36 +253,33 @@ const Message = () => {
           }
           const messageId =
             Date.now() + "-" + Math.random().toString(36).substring(2, 9);
-          simulateFileUpload(file, messageId);
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const data = reader.result;
-            const newSms = {
-              id: messageId,
-              username: "",
-              picturesmsuser: "",
-              textsms: "",
-              datesms: `${hours}:${minutes}`,
-              mediasms: data,
-              medianame: file.name,
-              mediatype: file.type,
-              mediasize: file.size,
-              mediaicon: fileIcon,
-              isUploading: true, //indicateur d'upload en cours
-            };
-            newtab.push(newSms); //ajoutons newsms dans un nouveau tableau
-            if (newtab.length === files.length) {
-              console.log(newSms);
-              setusertableau((prev) => ({
-                ...prev,
-                [selectUser]: [...(prev[selectUser] || []), ...newtab],
-              }));
-              // Activer le sablier et initialiser la progression
-              //setUploadingMessages((prev) => ({ ...prev, [messageId]: true }));
-              //setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
-            }
+          //simulateFileUpload(file, messageId);
+          const reader = URL.createObjectURL(file);
+          const newSms = {
+            id: messageId,
+            username: "",
+            picturesmsuser: "",
+            textsms: "",
+            datesms: `${hours}:${minutes}`,
+            mediasms: reader,
+            medianame: file.name,
+            mediatype: file.type,
+            mediasize: file.size,
+            mediaicon: fileIcon,
+            isUploading: true, //indicateur d'upload en cours
+            time: Date.now(),
           };
-          reader.readAsDataURL(file);
+          newtab.push(newSms); //ajoutons newsms dans newtab
+          if (newtab.length === files.length) {
+            //si tous les fichiers sont traités
+            setusertableau((prev) => ({
+              ...prev,
+              [selectUser]: [...(prev[selectUser] || []), ...newtab],
+            }));
+            // Activer le sablier et initialiser la progression
+            //setUploadingMessages((prev) => ({ ...prev, [messageId]: true }));
+            //setUploadProgress((prev) => ({ ...prev, [messageId]: 0 }));
+          }
         }
       });
     }
@@ -347,8 +303,10 @@ const Message = () => {
         textsms: valuesms,
         datesms: `${hours}:${minutes}`,
         mediasms: "",
+        time: Date.now(),
         replyTo: messageToReply
           ? {
+              //On cree un objet de messageToReply avec des clès id,username etc
               id: messageToReply.id,
               username: messageToReply.username,
               picturesmsuser: messageToReply.picturesmsuser,
@@ -382,9 +340,9 @@ const Message = () => {
     const link = document.createElement("a");
     link.href = fileData; //lien du fichier
     link.download = fileName; //nom du fichier
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    document.body.appendChild(link); //ajouter le lien à la page
+    link.click(); //click automatique sur le lien
+    document.body.removeChild(link); //supprimer le lien de la page
     setOpen10(false);
   };
   const handleClose = () => {
@@ -440,21 +398,50 @@ const Message = () => {
   useEffect(() => {
     localStorage.setItem("usertableau", JSON.stringify(usertableau));
   }, [usertableau]);
-  useEffect(() => {
+  /* useEffect(() => {
     const data = localStorage.getItem("usertableau");
     if (data) {
       setusertableau(JSON.parse(data));
     }
-  }, []);
+  }, []);*/
+  useEffect(() => {
+    const safeData = JSON.parse(JSON.stringify(usertableau));
+
+    Object.keys(safeData).forEach((userId) => {
+      safeData[userId] = safeData[userId].map((msg) => ({
+        ...msg,
+        mediasms: "",
+        picturesmsuser: "",
+      }));
+    });
+
+    localStorage.setItem("usertableau", JSON.stringify(safeData));
+  }, [usertableau]);
   const handlerightclick = (id) => {
     setViewOption((prev) => (prev === id ? null : id));
   };
   useEffect(() => {
     if (refslider.current) {
-      //refslider.current.scrollTop = refslider.current.scrollHeight;
       refslider.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [usertableau[selectUser]]);
+
+  const getLastMessageTime = (userId) => {
+    const messages = usertableau[userId];
+    if (!messages || messages.length === 0) return 0;
+    return messages[messages.length - 1].time || 0;
+  };
+  //cliquer sur ami et etre redirigé vers la page de message
+  useEffect(() => {
+    if (clickuser && adduser) {
+      const found = adduser.find((user) => user.id === clickuser);
+      if (found) {
+        setselectUser(clickuser);
+        setselectUserName(found);
+        setusertableau((prev) => ({ ...prev, [clickuser]: [] }));
+      }
+    }
+  }, [clickuser, adduser]);
 
   return (
     <div className="MessageMain">
@@ -470,42 +457,49 @@ const Message = () => {
             onChange={handlechange}
           />
         </div>
+
         <div className="UserMain">
-          {users.map((p) => (
-            <div
-              className={`userSelect ${selectUser === p.id ? "active" : ""}`}
-              key={p.id}
-              onClick={() => {
-                handleselectionUser(p);
-                handletoggle(p.id);
-              }}
-            >
-              <img src={p.image} alt="" />
-              <div className="userSelectText">
-                <p>{p.name}</p>
-                {usertableau[p.id] && usertableau[p.id].length > 0
-                  ? (usertableau[p.id][usertableau[p.id].length - 1].textsms
-                      .length > 28
-                      ? `${usertableau[p.id][
-                          usertableau[p.id].length - 1
-                        ].textsms.slice(0, 28)}...`
-                      : `${
-                          usertableau[p.id][usertableau[p.id].length - 1]
-                            .textsms
-                        }`) ||
-                    (usertableau[p.id][usertableau[p.id].length - 1].medianame
-                      .length > 28
-                      ? `${usertableau[p.id][
-                          usertableau[p.id].length - 1
-                        ].medianame.slice(0, 28)}...`
-                      : `${
-                          usertableau[p.id][usertableau[p.id].length - 1]
-                            .medianame
-                        }`)
-                  : "Aucun message"}
-              </div>
-            </div>
-          ))}
+          {adduser && adduser.length > 0 ? (
+            [...adduser]
+              .sort(
+                (a, b) => getLastMessageTime(b.id) - getLastMessageTime(a.id)
+              )
+              .map((p) => (
+                <div
+                  className={`userSelect ${
+                    selectUser === p.id ? "active" : ""
+                  }`}
+                  key={p.id}
+                  onClick={() => {
+                    handleselectionUser(p);
+                    handletoggle(p.id);
+                  }}
+                >
+                  <img src={p.image} alt="" />
+                  <div className="userSelectText">
+                    <p>{p.name}</p>
+                    {usertableau[p.id] && usertableau[p.id].length > 0
+                      ? (usertableau[p.id][usertableau[p.id].length - 1].textsms
+                          .length > 28
+                          ? `${usertableau[p.id][
+                              usertableau[p.id].length - 1
+                            ].textsms.slice(0, 28)}...`
+                          : usertableau[p.id][usertableau[p.id].length - 1]
+                              .textsms) ||
+                        (usertableau[p.id][usertableau[p.id].length - 1]
+                          .medianame.length > 28
+                          ? `${usertableau[p.id][
+                              usertableau[p.id].length - 1
+                            ].medianame.slice(0, 28)}...`
+                          : usertableau[p.id][usertableau[p.id].length - 1]
+                              .medianame)
+                      : "Aucun message"}
+                  </div>
+                </div>
+              ))
+          ) : (
+            <p>Aucun ami pour le moment</p>
+          )}
         </div>
       </div>
       {selectUserName ? (
@@ -519,7 +513,13 @@ const Message = () => {
               <p>{selectUserName.name}</p>
             </div>
           )}
-          <div className="MessageWrittingContainer">
+          <div
+            className="MessageWrittingContainer"
+            style={{
+              backgroundImage: choicebk ? `url(${choicebk})` : `none`,
+              backgroundColor: choicebk ? "transparent" : "white",
+            }}
+          >
             {currentMessages.map((p) => (
               <div className="UserMessage" key={p.id}>
                 <div
@@ -534,7 +534,7 @@ const Message = () => {
                       <p>Pouya / vous</p>
                       <span>
                         {p.replyTo.textsms.length > 50
-                          ? `${p.replyTo.textesms.slice(0, 50)}...`
+                          ? `${p.replyTo.textsms.slice(0, 50)}...`
                           : `${p.replyTo.textsms}`}
                       </span>
                       <img src={p.replyTo.picturesmsuser} alt="" />
@@ -630,74 +630,7 @@ const Message = () => {
               </div>
             ))}
             <div className="" ref={refslider}></div>
-            {/* <div className="UserMessage">
-            <div className="UserMessageText">
-              <div className="UserMessageCopy">
-                <p>Pouya / vous</p>
-                <span>bonjour dimitri tu vas bien moi oui</span>
-              </div>
-              <p id="textPrincipal">bonjour monsieur ,test 1</p>
-              <p id="hoursms">18:00</p>
-            </div>
-            <div className="UserMessageChargement">
-              <img src={sablier} alt="" />
-            </div>
-          </div>
-          <div className="UserMessageAway">
-            <div className="UserMessageChargementAway">
-              <img src={sablier} alt="" />
-            </div>
-            <div className="UserMessageAwayText">
-              <div className="UserMessageCopy">
-                <p>Pouya / vous</p>
-                <span>bonjour dimitri tu vas bien moi oui</span>
-              </div>
-              <p id="textPrincipal">
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Beatae
-                obcaecati, excepturi harum cumque, quas laudantium dolorum
-                voluptatem vitae porro voluptatum dolore labore odit at, officia
-                reiciendis laboriosam quaerat placeat assumenda?{" "}
-              </p>
-              <p id="hoursms">18:00</p>
-            </div>
-          </div>
-          <div className="UserMessageAway">
-            <div className="UserMessageChargementAway">
-              <img src={sablier} alt="" />
-            </div>
-            <div className="UserMessageAwayText">
-              <div className="UserMessageCopy">
-                <p>Pouya / vous</p>
-                <span>bonjour dimitri tu vas bien moi oui</span>
-              </div>
-              <p id="textPrincipal">
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Beatae
-                obcaecati, excepturi harum cumque, quas laudantium dolorum
-                voluptatem vitae porro voluptatum dolore labore odit at, officia
-                reiciendis laboriosam quaerat placeat assumenda? Lorem ipsum
-                dolor sit amet consectetur adipisicing elit. Alias, sint omnis
-                delectus dicta, officiis reprehenderit iste aut repellendus
-                molestias iusto illo possimus atque adipisci libero eligendi
-                natus. Esse, ducimus tempora? Lorem ipsum, dolor sit amet
-                consectetur adipisicing elit. Suscipit ipsam mollitia magni
-                voluptates omnis id, minus nesciunt quae porro et qui reiciendis
-                at voluptas temporibus! Exercitationem molestiae ex ipsa
-                perferendis. Lorem ipsum, dolor sit amet consectetur adipisicing
-                elit. Beatae obcaecati, excepturi harum cumque, quas laudantium
-                dolorum voluptatem vitae porro voluptatum dolore labore odit at,
-                officia reiciendis laboriosam quaerat placeat assumenda? Lorem
-                ipsum dolor sit amet consectetur adipisicing elit. Alias, sint
-                omnis delectus dicta, officiis reprehenderit iste aut
-                repellendus molestias iusto illo possimus atque adipisci libero
-                eligendi natus. Esse, ducimus tempora? Lorem ipsum, dolor sit
-                amet consectetur adipisicing elit. Suscipit ipsam mollitia magni
-                voluptates omnis id, minus nesciunt quae porro et qui reiciendis
-                at voluptas temporibus! Exercitationem molestiae ex ipsa
-                perferendis.
-              </p>
-              <p id="hoursms">18:00</p>
-            </div>
-          </div>
+            {/* 
           <div className="UserMessageAway">
             <div className="UserMessageChargementAway">
               <img src={sablier} alt="" />

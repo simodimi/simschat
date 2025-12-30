@@ -5,9 +5,17 @@ import Message from "./pages/Message";
 import Statuts from "./pages/Statuts";
 import Para from "./pages/Para";
 import Ami from "./pages/Ami";
-import Groupe from "./pages/Groupe";
+
+import { useState } from "react";
+import Connexion from "./pages/Connexion";
+import Inscription from "./pages/Inscription";
+import Forgetpassword from "./pages/Forgetpassword";
 
 function App() {
+  const [choicebk, setchoicebk] = useState(null);
+  const [adduser, setadduser] = useState([]);
+  //click et envoyer sms
+  const [clickuser, setclickuser] = useState(null);
   return (
     <>
       <BrowserRouter>
@@ -17,11 +25,30 @@ function App() {
           </div>
           <div className="principalMain">
             <Routes>
-              <Route path="/message" element={<Message />} />
+              <Route path="/" element={<Connexion />} />
+              <Route
+                path="/message"
+                element={
+                  <Message
+                    choicebk={choicebk}
+                    adduser={adduser}
+                    clickuser={clickuser}
+                  />
+                }
+              />
               <Route path="/statuts" element={<Statuts />} />
-              <Route path="/para" element={<Para />} />
-              <Route path="/ami" element={<Ami />} />
-              <Route path="/groupe" element={<Groupe />} />
+              <Route
+                path="/para"
+                element={<Para setchoicebk={setchoicebk} />}
+              />
+              <Route
+                path="/ami"
+                element={
+                  <Ami setadduser={setadduser} setclickuser={setclickuser} />
+                }
+              />
+              <Route path="inscription" element={<Inscription />} />
+              <Route path="forgetpassword" element={<Forgetpassword />} />
             </Routes>
           </div>
         </div>

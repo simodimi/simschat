@@ -41,31 +41,6 @@ Message.belongsTo(User, {
   onDelete: "SET NULL",
 });
 
-// friends
-//demandes d'amitié envoyées
-User.hasMany(Friends, {
-  foreignKey: { name: "requesterId", allowNull: false },
-  as: "sentFriendRequests",
-  onDelete: "CASCADE",
-});
-//demandes d'amitié reçues
-User.hasMany(Friends, {
-  foreignKey: { name: "addresseeId", allowNull: false },
-  as: "receivedFriendRequests",
-  onDelete: "CASCADE",
-});
-//association vers l'user(demandeur ou receveur)
-Friends.belongsTo(User, { foreignKey: "requesterId", as: "requester" });
-Friends.belongsTo(User, { foreignKey: "addresseeId", as: "addressee" });
-
-// amis validés via friends
-User.belongsToMany(User, {
-  through: Friends, //la relation passe par la table friends
-  as: "friends", //nom de la relation dans sequelize
-  foreignKey: "requesterId",
-  otherKey: "addresseeId",
-});
-
 // Status
 User.hasMany(Status, {
   foreignKey: { name: "userId", allowNull: false },

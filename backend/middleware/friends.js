@@ -1,5 +1,6 @@
 const Friends = require("../models/Friends");
 const User = require("../models/User");
+const { Op } = require("sequelize");
 
 // Vérifier si deux utilisateurs sont amis
 const areFriends = async (req, res, next) => {
@@ -14,7 +15,7 @@ const areFriends = async (req, res, next) => {
     const friendship = await Friends.findOne({
       where: {
         status: "accepter",
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { requesterId: currentUserId, addresseeId: userId },
           { requesterId: userId, addresseeId: currentUserId },
         ],
@@ -45,7 +46,7 @@ const checkFriendRequestExists = async (req, res, next) => {
 
     const existingRequest = await Friends.findOne({
       where: {
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { requesterId, addresseeId },
           { requesterId: addresseeId, addresseeId: requesterId },
         ],

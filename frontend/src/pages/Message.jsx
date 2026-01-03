@@ -18,9 +18,10 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import Button from "../containers/Button.jsx";
+import { useAuth } from "../pages/AuthContextUser.jsx";
 import imgbk from "../assets/background/neige.jpg";
 const Message = ({ choicebk, adduser, clickuser }) => {
-  const user = [
+  const userx = [
     { id: 1, name: "pouya", image: img, text: "salut", date: "10/10/2022" },
     {
       id: 2,
@@ -40,7 +41,7 @@ const Message = ({ choicebk, adduser, clickuser }) => {
   ];
   const [open10, setOpen10] = useState(false);
   const [textsearch, settextsearch] = useState("");
-  const [users, setusers] = useState(user);
+  const [users, setusers] = useState(userx);
   // const [test, settext] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   //const [imagemedia, setimagemedia] = useState(null);
@@ -64,6 +65,7 @@ const Message = ({ choicebk, adduser, clickuser }) => {
   const datelocal = new Date(local); //convertir en heure local
   const hours = datelocal.getHours().toString().padStart(2, "0");
   const minutes = datelocal.getMinutes().toString().padStart(2, "0");
+  const { user } = useAuth();
   const [UserHomeSms, setUserHomeSms] = useState({
     id: Date.now() + "-" + Math.random().toString(36).substring(2, 9),
     username: "",
@@ -498,7 +500,7 @@ const Message = ({ choicebk, adduser, clickuser }) => {
                 </div>
               ))
           ) : (
-            <p>Aucun ami pour le moment</p>
+            <p style={{ textAlign: "center" }}>Aucun ami pour le moment</p>
           )}
         </div>
       </div>
@@ -759,7 +761,10 @@ const Message = ({ choicebk, adduser, clickuser }) => {
         </div>
       ) : (
         <div className="noSelection">
-          <p>Hello,veuillez choisir un ami pour débuter la conversation.</p>
+          <p>
+            Hello {user?.username || ""},veuillez choisir un ami pour débuter la
+            conversation.
+          </p>
         </div>
       )}
 

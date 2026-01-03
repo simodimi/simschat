@@ -1,8 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-const AuthContextUser = createContext();
 import { toast } from "react-toastify";
+
+const AuthContextUser = createContext();
 export const useAuth = () => {
   const context = useContext(AuthContextUser);
   if (!context) throw new Error("useAuth must be used within an AuthProvider");
@@ -19,10 +20,10 @@ export const AuthProviderUser = ({ children }) => {
   // Vérifie la session sur le backend
   const verifyToken = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/user/verify/token", {
+      const res = await axios.get("http://localhost:5000/user/check-token", {
         withCredentials: true,
       });
-      if (res.data.valid || res.data.user) setuser(res.data.user);
+      if (res.data?.valid) setuser(res.data.user);
       else setuser(null);
     } catch (error) {
       console.error("Erreur de vérification du token", error);
@@ -39,21 +40,17 @@ export const AuthProviderUser = ({ children }) => {
   // Connexion → backend place le cookie httpOnly
   const login = async (email, password) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/user/login",
-        { useremail: email, userpassword: password },
-        { withCredentials: true }
-      );
-      if (res.status === 200) {
-        setuser(res.data);
-        toast.success("Connexion réussie !");
-        return res.data;
-      } else {
-        throw new Error(res.data.message || "Erreur de connexion");
-      }
+      const res = await axios.post("http://localhost:5000/user/login", {
+        useremail: email,
+        userpassword: password,
+      });
+
+      setuser(res.data);
+      toast.success(`Connexion réussie ${res.data.username}`);
+      return res.data;
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Erreur de connexion";
+      const msg = error.response?.data?.message || "Erreur de connexion";
+      toast.error(msg);
       throw error;
     }
   };
@@ -67,7 +64,7 @@ export const AuthProviderUser = ({ children }) => {
         {},
         { withCredentials: true }
       );
-    } catch {
+    } catch (error) {
       console.error("Erreur de logout", error);
     } finally {
       setuser(null);
@@ -81,7 +78,6 @@ export const AuthProviderUser = ({ children }) => {
         user,
         login,
         logout,
-        verifyToken,
         loading,
         isAuthenticated: !!user,
       }}

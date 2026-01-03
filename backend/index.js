@@ -4,12 +4,14 @@ require("dotenv").config();
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const rateLimit = require("express-rate-limit");
 const { Server } = require("socket.io");
 const http = require("http"); //serveur de node
 const app = express(); //contenir les routes
 const server = http.createServer(app); //création du serveur
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 // Configuration Socket.io
 const io = new Server(server, {
   cors: {
@@ -45,8 +47,8 @@ const friendRoute = require("./routes/FriendsRoute");
 //middleware
 const { verifyToken } = require("./middleware/auth");
 const { uploadStatusMedia } = require("./middleware/upload");
-const { messageLimiter } = require("./middleware/rateLimit");
-const { friendRequestLimiter } = require("./middleware/rateLimit");
+const { messageLimiter } = require("./middleware/ratelimit");
+const { friendRequestLimiter } = require("./middleware/ratelimit");
 
 //routes
 app.use("/user", userRoute);
@@ -54,7 +56,7 @@ app.use("/status", verifyToken, statusRoute);
 app.use("/status-item", verifyToken, uploadStatusMedia, statusItemRoute);
 app.use("/status-item-view", verifyToken, statusViewRoute);
 app.use("/message", verifyToken, messageLimiter, messageRoute);
-app.use("/friends", verifyToken, friendRequestLimiter, friendRoute);
+app.use("/friends", friendRoute);
 
 io.on("connection", (socket) => {
   // Déconnexion du client
@@ -63,25 +65,20 @@ io.on("connection", (socket) => {
     // Exemple : retirer l’utilisateur d’une liste en mémoire, mettre à jour un statut, etc.
   });
 
-  /* // Gestion activation/désactivation produits
-  socket.on("join_products", () => {
-    socket.join("products_room");
+  // stockage utilisateurs
+  socket.on("join_friends_room", () => socket.join("friends_room"));
+  socket.on("leave_friends_room", () => socket.leave("friends_room"));
+  //room des amis
+  socket.on("join_user_room", (userId) => {
+    if (!userId) return;
+    socket.join(`user_${userId}`);
+    console.log(`Utilisateur ${userId} rejoint room user_${userId}`);
   });
-
-  socket.on("leave_products", () => {
-    socket.leave("products_room");
-  });*/
-
-  // Messages utilisateurs
-  socket.on("join_messages_room", () => socket.join("messages_room"));
-  socket.on("leave_messages_room", () => socket.leave("messages_room"));
-
-  /* // Gestion des commandes
-  socket.on("join_orders_room", () => socket.join("orders_room"));
-  socket.on("leave_orders_room", () => socket.leave("orders_room"));*/
 });
+//exporter io pour l'utiliser dans les controllers
+global.io = io;
 //lancons le serveur
-db.sync({ alter: true })
+db.sync({ alter: true }) /*{ alter: true }*/
   .then(() => {
     server.listen(process.env.SERVER_PORT, () => {
       console.log(`serveur lancé sur le port ${process.env.PORT}`);

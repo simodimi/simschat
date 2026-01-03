@@ -1,32 +1,47 @@
 import React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const ConfirmAccount = () => {
-  const { token } = useParams(); //recuperer le token de l'url
+  const hasValidated = useRef(false);
+
+  const { token } = useParams();
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
   useEffect(() => {
-    const confirm = async () => {
+    if (!token || hasValidated.current) return;
+
+    hasValidated.current = true;
+
+    const validate = async () => {
       try {
-        await axios.post(`http://localhost:5000/auth/confirm/${token}`);
-        //rediriger vers la page de connexion
-        setTimeout(() => {
-          navigate("/message", { replace: true });
-        }, 1500);
+        await axios.get(`http://localhost:5000/user/validate/${token}`);
+        toast.success("Compte activé avec succès !");
+        setTimeout(() => navigate("/"), 2000);
       } catch (error) {
-        setError("lien expire");
+        const msg = error.response?.data?.message;
+
+        if (msg === "compte deja validé") {
+          toast.info("Compte déjà activé, vous pouvez vous connecter");
+          navigate("/");
+        } else {
+          toast.error("Lien invalide ou expiré");
+        }
       }
     };
 
-    confirm();
+    validate();
   }, [token, navigate]);
-  if (error) {
-    return <div>{error}</div>;
-  }
-  return <div>Confirmationdu compte en cours...</div>;
+
+  return (
+    <div style={{ textAlign: "center", padding: "50px" }}>
+      <h2>Validation en cours...</h2>
+      <p>veuillez vérifier votre boite mail</p>
+      <p>Veuillez patienter</p>
+    </div>
+  );
 };
 
 export default ConfirmAccount;

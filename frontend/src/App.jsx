@@ -10,8 +10,10 @@ import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
 import Forgetpassword from "./pages/Forgetpassword";
 import Notification from "./containers/Notification";
-import ProtectedRouteUser from "../../../simsburger/frontend/src/pages/ProtectedRouteUser";
+import ProtectedRouteUser from "./pages/ProtectedRouteUser";
 import { AuthProviderUser } from "./pages/AuthContextUser";
+import ConfirmAccount from "./pages/ConfirmAccount";
+import Waiting from "./containers/Waiting";
 
 function App() {
   const [choicebk, setchoicebk] = useState(null);
@@ -25,8 +27,10 @@ function App() {
           <Routes>
             {/* routes publique */}
             <Route path="/" element={<Connexion />} />
-            <Route path="inscription" element={<Inscription />} />
-            <Route path="forgetpassword" element={<Forgetpassword />} />
+            <Route path="/inscription" element={<Inscription />} />
+            <Route path="/forgetpassword" element={<Forgetpassword />} />
+            <Route path="/wait" element={<Waiting />} />
+            <Route path="/confirmation/:token" element={<ConfirmAccount />} />
             {/* routes privee */}
             <Route
               path="/*"

@@ -3,7 +3,10 @@ import Button from "../containers/Button";
 import "../styles/connexion.css";
 import img from "../assets/logochat.png";
 import pict from "../assets/pict.webp";
-import { Link, useNavigate } from "react-router-dom";
+import { Form, Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useAuth } from "../pages/AuthContextUser";
 const Inscription = () => {
   const navige = useNavigate();
   const [userData, setuserData] = useState({
@@ -17,6 +20,7 @@ const Inscription = () => {
   const [picture, setpicture] = useState(null);
   const [error, seterror] = useState("");
   const [errorcdt, seterrorcdt] = useState(null);
+  const { login } = useAuth();
   const handleselectpicture = () => {
     refphoto.current.click();
   };
@@ -44,7 +48,7 @@ const Inscription = () => {
       seterrorcdt(value.trim().length > 0);
     }
   };
-  const handlesubmit = (e) => {
+  const handlesubmit = async (e) => {
     e.preventDefault();
     if (
       !userData.username ||
@@ -71,19 +75,43 @@ const Inscription = () => {
       seterror("le mot de passe ne respecte pas toutes les conditions");
       return;
     }
+    try {
+      //construction du formdata
+      const formData = new FormData();
+      formData.append("username", userData.username);
+      formData.append("useremail", userData.useremail);
+      formData.append("userpassword", userData.userpassword);
+      formData.append("userconfirmpassword", userData.userconfirmpassword);
+      if (userData.userphoto instanceof File) {
+        formData.append("userphoto", userData.userphoto);
+      }
+      const res = await axios.post(
+        "http://localhost:5000/user/register",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      if (res.status === 201) {
+        toast.success(
+          `valider votre inscription par mail ,${userData.username}`
+        );
 
-    seterror("Inscription reussie");
-    console.log(userData);
-    navige("/message");
-
-    setpicture(null);
-    setuserData({
-      username: "",
-      userpassword: "",
-      useremail: "",
-      userphoto: null,
-      userconfirmpassword: "",
-    });
+        seterror(`valider votre inscription par mail ,${userData.username}`);
+        navige("/wait");
+        setpicture(null);
+        setuserData({
+          username: "",
+          userpassword: "",
+          useremail: "",
+          userphoto: null,
+          userconfirmpassword: "",
+        });
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Erreur de connexion";
+      seterror(errorMessage);
+      toast.error(errorMessage);
+    }
   };
   const checkpassword = (password) => {
     const dimi = userData.userpassword;

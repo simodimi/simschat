@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Mailjet = require("node-mailjet");
 const crypto = require("crypto");
+const { Op } = require("sequelize");
 
 //génére un token jwt
 const generateToken = (user) => {
@@ -74,18 +75,23 @@ const createUser = async (req, res) => {
               </div>
               
           <p>Bonjour ${newUser.username}, votre compte a été crée avec succès.</p>
-          <p>Veuillez confirmer votre compte en cliquant sur le lien suivant : <a href="http://localhost:3000/confirmation/${newUser.validationToken}">Confirmer mon compte</a></p>
+          <p>Veuillez confirmer votre compte en cliquant sur le lien suivant : <a href="http://localhost:5173/confirmation/${newUser.validationToken}">Confirmer mon compte</a></p>
           <p> à bientot sur Sim'sChat !</p>
           `,
         },
       ],
     });
+    if (global.io) {
+      global.io.to("friends_room").emit("friends_update", newUser);
+    }
     //renvoyer les données de l'user
     return res.status(201).json({
       iduser: newUser.iduser,
       username: newUser.username,
       useremail: newUser.useremail,
       userphoto: newUser.userphoto,
+      message:
+        "utilisateur créé avec succès, veuillez confirmer votre compte par mail",
     });
   } catch (error) {
     console.error("erreur lors de la création de l'utilisateur", error);
@@ -96,7 +102,7 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { useremail, userpassword } = req.body;
-    if (!username || !userpassword) {
+    if (!useremail || !userpassword) {
       return res
         .status(400)
         .json({ message: "tous les champs sont obligatoires" });
@@ -145,6 +151,9 @@ const validateUserByToken = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "l'utilisateur n'existe pas" });
     }
+    if (user.isActive) {
+      return res.status(400).json({ message: "compte deja validé" });
+    }
     user.validationToken = null;
     user.isActive = true;
     await user.save();
@@ -157,6 +166,9 @@ const validateUserByToken = async (req, res) => {
 //supprimer un user
 const deleteUser = async (req, res) => {
   try {
+    if (req.user.iduser !== parseInt(req.params.iduser)) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
     const deleted = await User.destroy({
       where: { iduser: req.params.iduser },
     });
@@ -203,6 +215,9 @@ const getUser = async (req, res) => {
 //mis à jour d'un user
 const updateUser = async (req, res) => {
   try {
+    if (req.user.iduser !== parseInt(req.params.iduser)) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
     const { username, userpassword, useremail, userphoto } = req.body;
     const updateData = { username, userpassword, useremail, userphoto };
     //si nouveau mot de passe

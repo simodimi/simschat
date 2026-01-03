@@ -3,33 +3,37 @@ import Button from "../containers/Button";
 import "../styles/connexion.css";
 import img from "../assets/logochat.png";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { useAuth } from "../pages/AuthContextUser";
+
 const Connexion = () => {
   const navige = useNavigate();
+  const { login, user } = useAuth();
   const [userData, setuserData] = useState({
-    username: "",
+    useremail: "",
     userpassword: "",
   });
   const [error, seterror] = useState("");
   const handleChangeUser = (e) => {
     setuserData({ ...userData, [e.target.name]: e.target.value });
   };
-  const handlesubmit = (e) => {
+  const handlesubmit = async (e) => {
     e.preventDefault();
-    if (!userData.username || !userData.userpassword) {
+    if (!userData.useremail || !userData.userpassword) {
       seterror("Veuillez remplir tous les champs");
       return;
     }
-    if (userData.username && userData.userpassword) {
-      setuserData({
-        username: userData.username,
-        userpassword: userData.userpassword,
-      });
-      seterror("Connexion reussie");
-      console.log(userData);
+    try {
+      await login(userData.useremail, userData.userpassword);
       navige("/message");
+      seterror("");
+      setuserData({ useremail: "", userpassword: "" });
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "Erreur de connexion";
+      seterror(errorMessage);
     }
-    seterror("");
-    setuserData({ username: "", userpassword: "" });
   };
   return (
     <div className="headerConnect">
@@ -49,12 +53,12 @@ const Connexion = () => {
 
         <form onSubmit={handlesubmit}>
           <div className="MainConnectTitle">
-            <p>Nom d'utilisateur</p>
+            <p>Email d'utilisateur</p>
             <input
-              type="text"
-              name="username"
-              value={userData.username}
-              placeholder="entrer votre nom"
+              type="email"
+              name="useremail"
+              value={userData.useremail}
+              placeholder="entrer votre email"
               onChange={handleChangeUser}
             />
           </div>

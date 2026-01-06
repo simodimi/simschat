@@ -26,6 +26,7 @@ const Ami = ({ setadduser, setclickuser }) => {
   const [socket, setSocket] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
   const [friends, setfriends] = useState([]);
+  const [showoptionuserAway, setshowoptionuserAway] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   const displayUsers = useMemo(() => {
@@ -391,12 +392,48 @@ const Ami = ({ setadduser, setclickuser }) => {
         {showprofile ? (
           <div className="UserAwayDescription">
             <div className="MessageWrittingHeaders">
-              <img src={showprofile.image} alt="" />
-              <p>{showprofile.name}</p>
-              <Button onClick={() => handlesendsms(showprofile.id)}>
-                Envoyer un message
+              <div className="UserAwayDescriptionHeader">
+                <div className="ImageSmsHeader">
+                  <img src={showprofile.image} alt="" />
+                  <span></span>
+                </div>
+                <div className="UserAwayDescriptionHeaderName">
+                  <p>{showprofile.name}</p>
+                  <div className="SiderbarTops">
+                    <div className="SiderbarTopOption">
+                      <img
+                        src={img}
+                        alt=""
+                        onClick={() => handlesendsms(showprofile.id)}
+                      />
+                    </div>
+                    <p id="texthovers">Envoyer un message</p>
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={() => setshowoptionuserAway(!showoptionuserAway)}
+                className="retourbtn"
+              >
+                {showoptionuserAway ? "replier" : "deplier"}
               </Button>
             </div>
+            {showoptionuserAway && showprofile && (
+              <div className="optionSentence">
+                <p>
+                  vous êtes ami(e)s avec {showprofile.name} depuis : mercredi 12
+                  janvier 2022
+                </p>
+                <p>
+                  dernier échange avec {showprofile.name}:mercredi 12 janvier
+                  2022
+                </p>
+                <p>liste des medias échangés avec {showprofile.name}</p>
+                <p onClick={() => setOpen(true)}>
+                  supprimer {showprofile.name} de votre liste d'ami(e)s
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <p id="searchAmity">allons à la recherche d'amitié 🌟</p>
@@ -466,7 +503,6 @@ const Ami = ({ setadduser, setclickuser }) => {
                     {/* ===== CAS : DÉJÀ AMIS ===== */}
                     {p.isFriend && (
                       <>
-                        <p>vous êtes ami(e)s</p>
                         <div className="AmityReceiveButton">
                           <Button className="retourbtn">
                             vous êtes ami(e)s
@@ -524,6 +560,33 @@ const Ami = ({ setadduser, setclickuser }) => {
           </div>
         </div>
       </div>
+      {open && showprofile && (
+        <Dialog open={open} onClose={handleClose} className="customdialog">
+          <DialogContent>
+            <DialogContentText className="dialogtext">
+              <p>voulez vous vraiment supprimer votre ami(e)s</p>
+            </DialogContentText>
+          </DialogContent>
+          <DialogContent>
+            <DialogContentText className="dialogtext">
+              <img src={showprofile.image} alt="" />
+              <p>{showprofile.name}</p>
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions className="optionbtn">
+            <Button onClick={handleClose} className="retourbtn">
+              Retour
+            </Button>
+            <Button
+              autoFocus
+              className="rejectbtn"
+              onClick={() => handledeleteuser(showprofile.id)}
+            >
+              confirmer
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </div>
   );
 };

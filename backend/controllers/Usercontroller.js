@@ -213,7 +213,7 @@ const getUser = async (req, res) => {
   }
 };
 //mis à jour d'un user
-const updateUser = async (req, res) => {
+/*const updateUser = async (req, res) => {
   try {
     if (req.user.iduser !== parseInt(req.params.iduser)) {
       return res.status(403).json({ message: "Accès refusé" });
@@ -239,7 +239,52 @@ const updateUser = async (req, res) => {
     console.error("erreur lors de la mise à jour de l'utilisateur", error);
     return res.status(500).json({ message: "une erreur est survenue" });
   }
+};*/
+const updateUser = async (req, res) => {
+  try {
+    if (req.user.iduser !== parseInt(req.params.iduser)) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const updateData = {};
+
+    if (req.body.username) {
+      updateData.username = req.body.username;
+    }
+
+    if (req.body.userpassword) {
+      updateData.userpassword = await bcrypt.hash(req.body.userpassword, 12);
+    }
+
+    if (req.file) {
+      updateData.userphoto = `${req.protocol}://${req.get("host")}/uploads/${
+        req.file.filename
+      }`;
+    }
+
+    const [updated] = await User.update(updateData, {
+      where: { iduser: req.params.iduser },
+    });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    // ✅ récupérer l'utilisateur à jour
+    const user = await User.findByPk(req.params.iduser, {
+      attributes: ["iduser", "username", "useremail", "userphoto"],
+    });
+
+    return res.status(200).json({
+      message: "Profil mis à jour avec succès",
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
 };
+
 const checkTokenValidity = async (req, res) => {
   try {
     // Ici verifyToken a déjà été exécuté (middleware), et req.admin est present
@@ -401,6 +446,66 @@ const logoutUser = (req, res) => {
   });
   return res.status(200).json({ message: "Déconnexion réussie" });
 };
+const updatePassword = async (req, res) => {
+  try {
+    if (req.user.iduser !== parseInt(req.params.iduser)) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Champs manquants" });
+    }
+
+    const user = await User.findByPk(req.params.iduser);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    // ✅ comparer mot de passe actuel
+    const isMatch = await bcrypt.compare(currentPassword, user.userpassword);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Mot de passe actuel incorrect" });
+    }
+
+    // ✅ hash nouveau mot de passe
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.userpassword = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Mot de passe modifié avec succès",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+// controllers/Usercontroller.js
+const updateBackground = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.iduser);
+    if (!user)
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+
+    const background = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+      : null;
+
+    user.background_image = background;
+    await user.save();
+
+    res.json({
+      message: "Background mis à jour",
+      background_image: background,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
 
 module.exports = {
   loginUser,
@@ -416,4 +521,6 @@ module.exports = {
   getAllUsers,
   createUser,
   validateUserByToken,
+  updatePassword,
+  updateBackground,
 };

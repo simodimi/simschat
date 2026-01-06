@@ -39,7 +39,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max
+    fileSize: 50 * 1024 * 1024, // 10MB max
   },
   fileFilter: fileFilter,
 });
@@ -49,7 +49,8 @@ const uploadProfilePhoto = upload.single("userphoto");
 
 // Middleware pour les fichiers de messages
 const uploadMessageFile = upload.single("file");
-
+//background
+const uploadBackground = upload.single("background");
 // Middleware pour les médias de status
 const uploadStatusMedia = upload.array("media", 10); // max 10 fichiers
 
@@ -60,7 +61,7 @@ const validateFile = (req, res, next) => {
   }
 
   // Vérifier la taille du fichier
-  if (req.file.size > 10 * 1024 * 1024) {
+  if (req.file.size > 50 * 1024 * 1024) {
     return res
       .status(400)
       .json({ message: "Fichier trop volumineux (max 10MB)" });
@@ -74,5 +75,6 @@ module.exports = {
   uploadProfilePhoto,
   uploadMessageFile,
   uploadStatusMedia,
+  uploadBackground,
   validateFile,
 };

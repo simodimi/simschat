@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/Usercontroller");
 const { verifyToken } = require("../middleware/auth");
-const { uploadProfilePhoto } = require("../middleware/upload");
+const {
+  uploadProfilePhoto,
+  uploadBackground,
+} = require("../middleware/upload");
 
 // Auth
 router.post("/register", uploadProfilePhoto, userController.createUser);
@@ -31,4 +34,12 @@ router.put(
 );
 router.delete("/:iduser", verifyToken, userController.deleteUser);
 
+router.put("/:iduser/password", verifyToken, userController.updatePassword);
+//background
+router.put(
+  "/:iduser/background",
+  verifyToken,
+  uploadBackground,
+  userController.updateBackground
+);
 module.exports = router;

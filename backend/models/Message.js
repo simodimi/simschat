@@ -21,7 +21,7 @@ const Message = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    MessageType: {
+    messageType: {
       type: DataTypes.ENUM("text", "image", "video", "audio", "file", "pdf"),
       defaultValue: "text",
     },
@@ -53,6 +53,14 @@ const Message = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    isRead: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    readAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     indexes: [
@@ -62,4 +70,5 @@ const Message = sequelize.define(
     ],
   }
 );
+
 module.exports = Message;

@@ -3,7 +3,7 @@ const router = express.Router();
 
 const friendController = require("../controllers/friendController");
 const { verifyToken } = require("../middleware/auth");
-const { friendRequestLimiter } = require("../middleware/ratelimit");
+const { friendRequestLimiter } = require("../middleware/rateLimit");
 
 // Envoyer une demande d'ami
 router.post(

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../styles/parametre.css";
 import { useNavigate } from "react-router-dom";
 import Button from "../containers/Button.jsx";
@@ -10,6 +10,9 @@ import DialogContentText from "@mui/material/DialogContentText";
 import on from "../assets/onlight.jpg";
 import off from "../assets/offlight.jpg";
 import Box from "@mui/material/Box";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useAuth } from "../pages/AuthContextUser.jsx";
 
 const Para = ({ setchoicebk }) => {
   const refphoto = useRef(null);
@@ -27,11 +30,13 @@ const Para = ({ setchoicebk }) => {
   const [paraopt4, setparaopt4] = useState(false);
   const [paraopt5, setparaopt5] = useState(false);
   const [paraopt6, setparaopt6] = useState(false);
+  const { user, setuser, logout } = useAuth();
+  const [disabling, setdisabling] = useState(false);
   const dating = Date.now() + "" + Math.random().toString(36).substring(2, 9);
   const [changepicture, setchangepicture] = useState({
     id: dating,
-    photoUser: "",
-    nameUser: "dimitri",
+    photoUser: null,
+    nameUser: `${user.username}`,
     passwordUser: "",
     newpasswordUser: "",
   });
@@ -41,6 +46,7 @@ const Para = ({ setchoicebk }) => {
   const reftexte = useRef(null);
   const [open, setOpen] = useState(false);
   const [night, setnight] = useState(false);
+
   const handlenavigate = () => {
     setpara1(true);
     setparaopt1(false);
@@ -153,16 +159,25 @@ const Para = ({ setchoicebk }) => {
     refphotobk.current.click();
   };
   const handleChangePicture = (e) => {
-    const { name, value } = e.target;
-    setchangepicture({ ...changepicture, [name]: value });
-    //image
+    const { name, value, files } = e.target;
+
     if (name === "photoUser") {
-      const file = e.target.files[0];
+      const file = files[0];
       if (file) {
+        setchangepicture((prev) => ({
+          ...prev,
+          photoUser: file, // ← vrai fichier
+        }));
         setpicture(URL.createObjectURL(file));
       }
+    } else {
+      setchangepicture((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
+
   const handleChangePicturebk = (e) => {
     //image
 
@@ -181,44 +196,165 @@ const Para = ({ setchoicebk }) => {
     setchangepicturebk("");
   };
   const handlemodifyname = () => {
-    reftexte.current.focus();
+    setdisabling(true);
+    setTimeout(() => {
+      reftexte.current?.focus();
+    }, 0);
   };
+
   const handlesavepicture = () => {
     if (reftexte.current) {
       setchangepicture({ ...changepicture, nameUser: reftexte.current.value });
-      alert(changepicture.nameUser);
+      toast.success(`nom modifié ${reftexte.current.value}`);
+      setdisabling(false);
     }
   };
-  const handlesavepassword = () => {
-    setchangepicture({
-      ...changepicture,
-      passwordUser: changepicture.passwordUser,
-      newpasswordUser: changepicture.newpasswordUser,
-    });
+  const handlesavepassword = async () => {
+    const pass = changepicture.newpasswordUser;
+    const check = {
+      longueur: pass.length >= 8,
+      chiffre: /\d/.test(pass),
+      maj: /[A-Z]/.test(pass),
+      min: /[a-z]/.test(pass),
+      symbole: /[!@#$%^&*(),.?":{}|<>]/.test(pass),
+    };
+    if (!Object.values(check).every((p) => p)) {
+      toast.error(
+        "le mot de passe ne respecte pas toutes les conditions,8 caractères,1 majuscule,1 minuscule,1 chiffre,1 symbole"
+      );
+      return;
+    }
+    if (!changepicture.newpasswordUser || !changepicture.passwordUser) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+    toast.success("Mot de passe modifié avec succès");
+    /*  try {
+      await axios.put(
+        `http://localhost:5000/user/${user.iduser}/password`,
+        {
+          currentPassword: changepicture.passwordUser,
+          newPassword: changepicture.newpasswordUser,
+        },
+        { withCredentials: true }
+      );
+
+      toast.success("Mot de passe modifié avec succès");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Erreur lors du changement de mot de passe"
+      );
+    }*/
   };
-  const handlesubmit1 = (e) => {
+  const handlesubmit1 = async (e) => {
     e.preventDefault();
-    setchangepicture({
-      ...changepicture,
-      photoUser: picture,
-      nameUser: reftexte.current.value,
-      passwordUser: changepicture.passwordUser,
-      newpasswordUser: changepicture.newpasswordUser,
-    });
-    console.log(changepicture);
-    handlenavigate();
+    try {
+      if (changepicture.newpasswordUser) {
+        const pass = changepicture.newpasswordUser;
+        const check = {
+          longueur: pass.length >= 8,
+          chiffre: /\d/.test(pass),
+          maj: /[A-Z]/.test(pass),
+          min: /[a-z]/.test(pass),
+          symbole: /[!@#$%^&*(),.?":{}|<>]/.test(pass),
+        };
+        if (!Object.values(check).every((p) => p)) {
+          toast.error(
+            "le mot de passe ne respecte pas toutes les conditions,8 caractères,1 majuscule,1 minuscule,1 chiffre,1 symbole"
+          );
+          return;
+        }
+        await axios.put(
+          `http://localhost:5000/user/${user.iduser}/password`,
+          {
+            currentPassword: changepicture.passwordUser,
+            newPassword: changepicture.newpasswordUser,
+          },
+          { withCredentials: true }
+        );
+
+        toast.success("Mot de passe modifié avec succès");
+      }
+      const formData = new FormData();
+      if (changepicture.photoUser) {
+        formData.append("userphoto", changepicture.photoUser);
+      }
+      if (changepicture.nameUser) {
+        formData.append("username", changepicture.nameUser);
+      }
+      const res = await axios.put(
+        `http://localhost:5000/user/${user.iduser}`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setuser((prev) => ({ ...prev, ...res.data.user }));
+      toast.success("Profil mis à jour avec succès");
+      handlenavigate();
+      setchangepicture({
+        passwordUser: "",
+        newpasswordUser: "",
+      });
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour");
+      console.error(error);
+    }
   };
-  const handlesubmitbk = (e) => {
+
+  /*const handlesubmitbk = (e) => {
     e.preventDefault();
     setchangepicturebk({ ...changepicturebk, photoUserbk: picturebk });
     setchoicebk(picturebk);
     handlenavigate();
+  };*/
+  const handlesubmitbk = async (e) => {
+    e.preventDefault();
+
+    if (!refphotobk.current.files[0]) {
+      toast.error("Aucune image sélectionnée");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("background", refphotobk.current.files[0]);
+
+      const res = await axios.put(
+        `http://localhost:5000/user/${user.iduser}/background`,
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setchoicebk(res.data.background_image);
+      toast.success("Fond d'écran sauvegardé");
+      handlenavigate();
+    } catch (err) {
+      toast.error("Erreur lors de la sauvegarde");
+      console.error(err);
+    }
   };
-  const handledefaultbk = () => {
+  useEffect(() => {
+    if (user?.background_image) {
+      setchoicebk(user.background_image);
+    }
+  }, [user]);
+  const handledefaultbk = async () => {
+    await axios.delete(`http://localhost:5000/user/${user.iduser}/background`, {
+      withCredentials: true,
+    });
     setchoicebk(null);
   };
   const handlelogin = () => {
-    alert("vous voulez vous deconnecter");
+    logout();
+    handlenavigate("/");
   };
 
   const handleClose = () => {
@@ -226,6 +362,17 @@ const Para = ({ setchoicebk }) => {
   };
   const handlenight = () => {
     setnight(!night);
+  };
+  const handledelete = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/user/${user.iduser}`, {
+        withCredentials: true,
+      });
+      await logout();
+      handlenavigate("/");
+    } catch (error) {
+      console.error(error);
+    }
   };
   return (
     <div className="headerpara">
@@ -238,7 +385,7 @@ const Para = ({ setchoicebk }) => {
       )}
       <div className="headerparachoice">
         <div className="parachoice">
-          {para0 && <p>hello dimitri,tu vas bien 😎</p>}
+          {para0 && <p>hello {user.username},tu vas bien 😎</p>}
           {para1 && <p onClick={handlepara1}>Changer votre profil?</p>}
           {para2 && <p onClick={handlepara2}>vous voulez vous deconnecter</p>}
           {para3 && <p onClick={handlepara3}>supprimer votre compte</p>}
@@ -246,7 +393,6 @@ const Para = ({ setchoicebk }) => {
           {para5 && (
             <p onClick={handlepara5}>Changer background des messages</p>
           )}
-          {!para6 && <p onClick={handlepara6}>activer mode sombre</p>}
         </div>
         {paraopt1 && (
           <form onSubmit={handlesubmit1}>
@@ -256,12 +402,16 @@ const Para = ({ setchoicebk }) => {
                 <div className="changePicturepara" onClick={handlenewpicture}>
                   <span>cliquer pour ajouter une photo</span>
                   <img src={plus} alt="" />
-                  {changepicture.photoUser.length > 0 && (
+                  {changepicture.photoUser && (
                     <div
                       className="newpicture"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <img src={picture} alt="" />
+                      {picture ? (
+                        <img src={picture} alt="" />
+                      ) : (
+                        <img src={`${user.userphoto}`} alt="" />
+                      )}
                     </div>
                   )}
                 </div>
@@ -270,7 +420,6 @@ const Para = ({ setchoicebk }) => {
                   accept="image/*"
                   ref={refphoto}
                   name="photoUser"
-                  value={changepicture.photoUser}
                   onChange={handleChangePicture}
                   style={{ display: "none" }}
                 />
@@ -295,6 +444,7 @@ const Para = ({ setchoicebk }) => {
                   id="textpicture"
                   ref={reftexte}
                   onChange={handleChangePicture}
+                  disabled={!disabling}
                 />
                 {changepicture.nameUser.length > 0 && (
                   <div className="pictureparabtn">
@@ -309,9 +459,9 @@ const Para = ({ setchoicebk }) => {
               </div>
               <div className="headerChangePicture">
                 <p>modifier votre mot de passe</p>
-                <p>mot de passe actuelle</p>
+                <p>mot de passe actuel</p>
                 <input
-                  type="text"
+                  type="password"
                   maxLength={50}
                   value={changepicture.passwordUser}
                   name="passwordUser"
@@ -320,7 +470,7 @@ const Para = ({ setchoicebk }) => {
                 />
                 <p>nouveau mot de passe</p>
                 <input
-                  type="text"
+                  type="password"
                   maxLength={50}
                   value={changepicture.newpasswordUser}
                   name="newpasswordUser"
@@ -414,7 +564,11 @@ const Para = ({ setchoicebk }) => {
                       className="newpicture"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <img src={picturebk} alt="" />
+                      {picturebk ? (
+                        <img src={picturebk} alt="" />
+                      ) : (
+                        <img src={`${user.background_image}`} alt="" />
+                      )}
                     </div>
                   )}
                 </div>
@@ -422,6 +576,7 @@ const Para = ({ setchoicebk }) => {
                   type="file"
                   accept="image/*"
                   ref={refphotobk}
+                  name="background"
                   onChange={handleChangePicturebk}
                   style={{ display: "none" }}
                 />
@@ -501,7 +656,7 @@ const Para = ({ setchoicebk }) => {
             <Button onClick={handleClose} className="retourbtn">
               Retour
             </Button>
-            <Button autoFocus className="rejectbtn" onClick={handlelogin}>
+            <Button autoFocus className="rejectbtn" onClick={handledelete}>
               confirmer
             </Button>
           </DialogActions>

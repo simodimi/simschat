@@ -8,7 +8,12 @@ const { Server } = require("socket.io");
 const http = require("http"); //serveur de node
 const app = express(); //contenir les routes
 const server = http.createServer(app); //création du serveur
+const path = require("path");
+require("./models/Unit");
+const fs = require("fs");
 
+// Servir les fichiers statiques (uploads)
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -47,8 +52,8 @@ const friendRoute = require("./routes/FriendsRoute");
 //middleware
 const { verifyToken } = require("./middleware/auth");
 const { uploadStatusMedia } = require("./middleware/upload");
-const { messageLimiter } = require("./middleware/ratelimit");
-const { friendRequestLimiter } = require("./middleware/ratelimit");
+const { messageLimiter } = require("./middleware/rateLimit");
+const { friendRequestLimiter } = require("./middleware/rateLimit");
 
 //routes
 app.use("/user", userRoute);
@@ -78,7 +83,7 @@ io.on("connection", (socket) => {
 //exporter io pour l'utiliser dans les controllers
 global.io = io;
 //lancons le serveur
-db.sync({ alter: true }) /*{ alter: true }*/
+db.sync() /*{ alter: true }*/
   .then(() => {
     server.listen(process.env.SERVER_PORT, () => {
       console.log(`serveur lancé sur le port ${process.env.PORT}`);

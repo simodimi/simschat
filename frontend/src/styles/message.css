@@ -36,6 +36,21 @@
   cursor: pointer;
   border-radius: 10px;
   background-color: rgb(141, 146, 216);
+  position: relative;
+}
+.numbermessage {
+  position: absolute;
+  top: 0px;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: green;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
 }
 .userSelect:hover {
   background-color: rgb(100, 105, 175);
@@ -306,12 +321,12 @@
   word-break: break-all;
   padding: 5px 0px;
 }
-#textPrincipal img {
+#textprincipalimg {
   width: 100%;
   height: 100%;
   max-width: 300px;
   max-height: 300px;
-  object-fit: cover;
+  object-fit: scale-down;
 }
 .iconeemoji {
   position: absolute;

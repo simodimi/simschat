@@ -19,10 +19,20 @@ User.hasMany(Message, {
   as: "receivedMessages",
   onDelete: "CASCADE",
 });
-//chaque message appartient a un utilisateur(expediteur ou destinataire)
-Message.belongsTo(User, { foreignKey: "senderId", as: "sender" });
-Message.belongsTo(User, { foreignKey: "receiverId", as: "receiver" });
 
+User.hasMany(Message, {
+  foreignKey: "deletedById",
+  as: "deletedMessages",
+});
+//chaque message appartient a un utilisateur(expediteur ou destinataire)
+Message.belongsTo(User, {
+  foreignKey: "senderId",
+  as: "sender",
+});
+Message.belongsTo(User, {
+  foreignKey: "receiverId",
+  as: "receiver",
+});
 Message.belongsTo(Message, {
   foreignKey: "replyToId",
   as: "replyTo",

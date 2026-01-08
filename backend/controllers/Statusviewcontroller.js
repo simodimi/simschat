@@ -1,5 +1,6 @@
 const StatusView = require("../models/StatusView");
 const StatusItem = require("../models/StatusItem");
+const Status = require("../models/Status");
 
 // Marquer un item comme vu
 const viewStatusItem = async (req, res) => {
@@ -17,6 +18,17 @@ const viewStatusItem = async (req, res) => {
         viewerId,
         statusItemId,
       },
+    });
+    const statusItem = await StatusItem.findByPk(statusItemId, {
+      include: {
+        model: Status,
+        as: "status",
+      },
+    });
+
+    global.io.to(`user_${statusItem.status.userId}`).emit("status:viewed", {
+      statusItemId,
+      viewerId,
     });
 
     return res.status(200).json({

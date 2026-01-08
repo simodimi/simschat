@@ -87,12 +87,14 @@
   height: 100%;
   position: relative !important;
   display: flex;
+  justify-content: center;
   overflow-y: hidden;
   overflow-x: hidden;
 }
 .headerStatusImg img {
   width: 100%;
   height: 100%;
+  padding: 20px 0;
   object-fit: scale-down;
 }
 .headerStatusImgButton {
@@ -103,14 +105,14 @@
 }
 .pdf-iframes {
   width: 100%;
-  height: 100%;
+  height: 100%; /* Taille fixe ou ajustable */
   border: none;
   overflow-y: hidden;
   overflow-x: hidden;
 }
 .pdf-containers {
   width: 100%;
-  height: 100%; /* Taille fixe ou ajustable */
+  height: 700px; /* Taille fixe ou ajustable */
   overflow-y: hidden;
   overflow-x: hidden;
 }

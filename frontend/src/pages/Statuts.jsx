@@ -17,19 +17,12 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useAuth } from "../pages/AuthContextUser";
+import { getSocket } from "../pages/AuthContextUser";
 
 const Statuts = () => {
-  const user = [
-    { id: 1, name: "User1", image: img, text: "salut", date: "10/10/2022" },
-    {
-      id: 2,
-      name: "User2",
-      image: img,
-      text: "bonjour dimitri,tu vas bien mon petit?",
-      date: "10/12/2022",
-    },
-    { id: 3, name: "User3", image: img, text: "salut", date: "10/10/2022" },
-  ];
   const couleur = [
     { id: 1, name: "black" },
     { id: 2, name: "white" },
@@ -57,7 +50,7 @@ const Statuts = () => {
   const [statutsBackground, setstatutsBackground] = useState(background);
   const [selectbackground, setselectbackground] = useState(null);
   const [selectcolor, setselectcolor] = useState(null);
-  const [users, setusers] = useState(user);
+  const [users, setusers] = useState([]);
   const [SelectionOpt1, setSelectionOpt1] = useState(false);
   const [SelectionOpt2, setSelectionOpt2] = useState(false);
   const [smstext, setsmstext] = useState("");
@@ -78,6 +71,7 @@ const Statuts = () => {
   const [open11, setOpen11] = useState(false);
   const [open12, setOpen12] = useState(false);
   const [selectedmedia, setSelectedmedia] = useState(null);
+  const { user } = useAuth();
   const focus = useRef(null);
   const refstatutphoto = useRef(null);
   const refstatutmedia = useRef(null);
@@ -91,7 +85,217 @@ const Statuts = () => {
   // durée réelle du media sélectionné (audio/vidéo)
   const [mediaDuration, setMediaDuration] = useState(null);
   const videoRef = useRef(null);
-  const progressRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+
+  const [friendStatuses, setFriendStatuses] = useState([]);
+  const [openFriend, setOpenFriend] = useState(false);
+  const [activeStatus, setActiveStatus] = useState(null);
+  const [newStatusUsers, setNewStatusUsers] = useState([]);
+  const [statusViews, setStatusViews] = useState([]);
+  const [allStatuses, setAllStatuses] = useState([]);
+  const publishedItems = statusPublish[0]?.items || [];
+
+  const openFriendStatus = (status) => {
+    setstepper(0);
+    setActiveStatus(status);
+    setOpenFriend(true);
+    setNewStatusUsers((prev) => prev.filter((id) => id !== status.user.iduser));
+  };
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !user?.iduser) return;
+
+    socket.emit("join_user_room", user.iduser);
+
+    return () => {
+      socket.emit("leave_user_room", user.iduser);
+    };
+  }, [user?.iduser]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewStatus = ({ userId }) => {
+      loadStatuses();
+      setNewStatusUsers((prev) =>
+        prev.includes(userId) ? prev : [...prev, userId]
+      );
+    };
+
+    const handleDeletedStatus = () => {
+      loadStatuses();
+    };
+
+    const handleViewedStatus = () => {
+      loadStatuses();
+    };
+
+    socket.on("status:new", handleNewStatus);
+    socket.on("status:deleted", handleDeletedStatus);
+    socket.on("status:viewed", handleViewedStatus);
+
+    return () => {
+      socket.off("status:new", handleNewStatus);
+      socket.off("status:deleted", handleDeletedStatus);
+      socket.off("status:viewed", handleViewedStatus);
+    };
+  }, []);
+
+  const loadStatuses = async () => {
+    const res = await axios.get("http://localhost:5000/status/active", {
+      withCredentials: true,
+    });
+
+    setAllStatuses(res.data); // NOUVEL ÉTAT
+  };
+
+  /* useEffect(() => {
+    if (!user?.iduser || allStatuses.length === 0) return;
+
+    // 🔹 1️⃣ Grouper TOUS les statuts par utilisateur
+    const groupedStatuses = Object.values(
+      allStatuses.reduce((acc, status) => {
+        const userId = status.user.iduser;
+
+        if (!acc[userId]) {
+          acc[userId] = {
+            user: status.user,
+            items: [],
+          };
+        }
+
+        acc[userId].items.push(...status.items);
+        return acc;
+      }, {})
+    );
+
+    // 🔹 2️⃣ MON statut (1 seul bloc)
+    const myStatus = groupedStatuses.filter(
+      (s) => s.user.iduser === user.iduser
+    );
+
+    // 🔹 3️⃣ STATUTS DE MES AMIS
+    const friendsStatus = groupedStatuses.filter(
+      (s) => s.user.iduser !== user.iduser
+    );
+
+    // 🔹 4️⃣ Mise à jour des states
+    setStatusPublish(myStatus); // ce que ton JSX "Mes statuts" attend
+    setFriendStatuses(friendsStatus);
+  }, [user, allStatuses]);*/
+
+  // Dans l'effet qui met à jour les statuts
+  useEffect(() => {
+    if (!user?.iduser || allStatuses.length === 0) return;
+
+    // 🔹 1️⃣ Grouper TOUS les statuts par utilisateur
+    const groupedStatuses = Object.values(
+      allStatuses.reduce((acc, status) => {
+        const userId = status.user.iduser;
+
+        if (!acc[userId]) {
+          acc[userId] = {
+            user: status.user,
+            items: [],
+          };
+        }
+
+        acc[userId].items.push(...status.items);
+        return acc;
+      }, {})
+    );
+
+    // 🔹 2️⃣ MON statut (1 seul bloc)
+    const myStatus = groupedStatuses.filter(
+      (s) => s.user.iduser === user.iduser
+    );
+
+    // 🔹 3️⃣ STATUTS DE MES AMIS
+    const friendsStatus = groupedStatuses.filter(
+      (s) => s.user.iduser !== user.iduser
+    );
+
+    // 🔹 4️⃣ Mise à jour des states
+    setStatusPublish(myStatus); // ce que ton JSX "Mes statuts" attend
+    setFriendStatuses(friendsStatus);
+  }, [user, allStatuses]);
+  useEffect(() => {
+    if (!openFriend || !activeStatus) return;
+
+    const item = activeStatus.items[stepper];
+    if (!item) return;
+
+    const isPlayable =
+      item.mediaType?.startsWith("video/") ||
+      item.mediaType?.startsWith("audio/");
+
+    // 👉 IMAGE / TEXTE / PDF → durée enregistrée
+    if (!isPlayable) {
+      setProgress(0);
+
+      const duration = (item.duration || 10) * 1000;
+      const start = Date.now();
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - start;
+        const percent = Math.min((elapsed / duration) * 100, 100);
+
+        setProgress(percent);
+
+        if (percent >= 100) {
+          clearInterval(interval);
+          setstepper((prev) =>
+            prev < activeStatus.items.length - 1 ? prev + 1 : prev
+          );
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    }
+  }, [stepper, openFriend, activeStatus]);
+
+  useEffect(() => {
+    loadStatuses();
+  }, []);
+  useEffect(() => {
+    if (!activeStatus) return;
+
+    const item = activeStatus.items[stepper];
+    if (!item) return;
+
+    axios.post(
+      `http://localhost:5000/status-item-view/${item.id}`,
+      {},
+      { withCredentials: true }
+    );
+  }, [stepper]);
+  const getViews = async (itemId) => {
+    const res = await axios.get(
+      `http://localhost:5000/status-item-view/${itemId}`,
+      { withCredentials: true }
+    );
+    return res.data;
+  };
+
+  const grouped = friendStatuses;
+
+  useEffect(() => {
+    if (!open12) return;
+    const item = publishedItems[stepper];
+    if (!item) return;
+
+    const loadViews = async () => {
+      try {
+        const views = await getViews(item.id);
+        setStatusViews(views);
+      } catch (err) {
+        console.error("Erreur chargement vues", err);
+      }
+    };
+
+    loadViews();
+  }, [stepper, open12, publishedItems]);
 
   const addStepsToStatus = () => {
     const newSteps = [];
@@ -114,36 +318,30 @@ const Statuts = () => {
       });
     }
 
-    if (previmgstatut) {
-      newSteps.push({
-        type: "image",
-        value: previmgstatut,
-        time: valuetimer,
-      });
-    }
+    if (newSteps.length === 0 && statusStep.length === 0) return;
 
-    // ✅ MEDIA : TOUJOURS ENTIER en visualisation
-    if (prevmediastatut) {
-      newSteps.push({
-        type: "media",
-        value: prevmediastatut,
-        mediatype,
-        time:
-          mediaDuration && mediaDuration > 0
-            ? Math.min(mediaDuration, MAX_STATUS_TIME)
-            : valuetimer,
-        fullPreview: true, // 🧠 flag important
-      });
-    }
-
-    if (newSteps.length === 0) return;
-
-    setStatusStep(newSteps);
+    setStatusStep((prev) => [...prev, ...newSteps]);
     setstepper(0);
     setOpen10(true);
   };
+  const handleFriendTimeUpdate = (e) => {
+    const item = activeStatus.items[stepper];
+    if (!item) return;
+
+    const percent = (e.target.currentTime / e.target.duration) * 100;
+
+    setProgress(Math.min(100, percent));
+
+    if (e.target.ended) {
+      setstepper((prev) =>
+        prev < activeStatus.items.length - 1 ? prev + 1 : prev
+      );
+    }
+  };
+
   const renderStep = (step) => {
     if (!step) return null;
+
     switch (step.type) {
       case "text":
         return (
@@ -151,15 +349,16 @@ const Statuts = () => {
             style={{
               backgroundImage: step.background
                 ? `url(${step.background})`
-                : `none`,
-              color: step.color ? step.color : "black",
+                : step.backgroundUrl
+                ? `url(http://localhost:5000${step.backgroundUrl})`
+                : "none",
+              color: step.color || "black",
               width: "100%",
               minHeight: "450px",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "contain",
+              backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
@@ -185,20 +384,38 @@ const Statuts = () => {
       case "image":
         return (
           <div className="headerStatusImg">
-            <img src={step.value} alt="" />
+            <img
+              src={
+                step.mediaUrl
+                  ? `http://localhost:5000${step.mediaUrl}`
+                  : step.value
+              }
+              alt=""
+            />
           </div>
         );
       case "media":
         return (
           <div className="headerStatusImg">
-            {step.mediatype && step.mediatype.startsWith("image/") && (
-              <img src={step.value} alt="" />
+            {step.mediatype?.startsWith("image/") && (
+              <img
+                src={
+                  step.mediaUrl
+                    ? `http://localhost:5000${step.mediaUrl}`
+                    : step.value
+                }
+                alt=""
+              />
             )}
-            {step.mediatype && step.mediatype.startsWith("video/") && (
+            {step.mediatype?.startsWith("video/") && (
               <video
                 key={`${step.value}-${stepper}`} // Important: changer key à chaque segment
                 ref={videoRef}
-                src={step.value}
+                src={
+                  step.mediaUrl
+                    ? `http://localhost:5000${step.mediaUrl}`
+                    : step.value
+                }
                 autoPlay
                 controls
                 width={"100%"}
@@ -207,20 +424,22 @@ const Statuts = () => {
                 preload="auto"
                 onLoadedMetadata={(e) => {
                   // Démarre au début du segment
-                  if (step.startTime !== undefined) {
+                  if (!openFriend && step.startTime !== undefined) {
                     e.target.currentTime = step.startTime;
                   }
                 }}
-                onTimeUpdate={handleTimeUpdate}
+                onTimeUpdate={
+                  openFriend ? handleFriendTimeUpdate : handleTimeUpdate
+                }
                 onEnded={() => {
                   // Passer au segment suivant quand la vidéo se termine
-                  if (stepper < statusPublish.length - 1) {
+                  if (stepper < statusStep.length - 1) {
                     setstepper((prev) => prev + 1);
                   }
                 }}
               />
             )}
-            {step.mediatype && step.mediatype.startsWith("audio/") && (
+            {step.mediatype?.startsWith("audio/") && (
               <audio
                 key={`${step.value}-${step.startTime}`}
                 controls
@@ -239,45 +458,87 @@ const Statuts = () => {
                   }
                 }}
               >
-                <source src={step.value} width={"100%"} />
+                <source
+                  src={
+                    step.mediaUrl
+                      ? `http://localhost:5000${step.mediaUrl}`
+                      : step.value
+                  }
+                />
               </audio>
             )}
-            {step.mediatype && step.mediatype.startsWith("application/pdf") && (
+
+            {step.mediatype === "application/pdf" && (
               <div className="pdf-containers">
-                <iframe src={step.value} className="pdf-iframes"></iframe>
+                <iframe
+                  src={
+                    step.mediaUrl
+                      ? `http://localhost:5000${step.mediaUrl}`
+                      : step.value
+                  }
+                  className="pdf-iframes"
+                />
               </div>
             )}
           </div>
         );
+
       default:
         return null;
     }
   };
+  useEffect(() => {
+    if (open12 && statusPublish?.[0]?.items?.length > 0) {
+      setstepper(0);
+    }
+  }, [open12, statusPublish]);
   const handleTimeUpdate = (e) => {
-    const step = statusPublish[stepper];
-    if (!step || !progressRef.current) return;
-
-    if (step.startTime === undefined || step.endTime === undefined) return;
+    const step = statusPublish[0]?.items[stepper];
+    if (!step || step.startTime === undefined) return;
 
     const current = e.target.currentTime;
     const duration = step.endTime - step.startTime;
 
-    const progress = (current - step.startTime) / duration;
+    const percent = ((current - step.startTime) / duration) * 100;
 
-    progressRef.current.style.width = `${Math.min(
-      100,
-      Math.max(0, progress * 100)
-    )}%`;
+    setProgress(Math.min(100, Math.max(0, percent)));
 
     if (current >= step.endTime) {
-      setstepper((prev) => (prev < statusPublish.length - 1 ? prev + 1 : prev));
+      setstepper((prev) =>
+        prev < statusPublish[0].items.length - 1 ? prev + 1 : prev
+      );
     }
   };
+
+  //charge les status en cas de rafraichissement
   useEffect(() => {
+    if (!user?.iduser) return;
+
+    const loadFriendsAndConversations = async () => {
+      try {
+        // Charger les amis
+        const friendsRes = await axios.get("http://localhost:5000/friends", {
+          withCredentials: true,
+        });
+
+        const friends = friendsRes.data.map((f) => ({
+          id: f.friend.iduser,
+          name: f.friend.username,
+          image: f.friend.userphoto || img,
+        }));
+        setusers(friends);
+      } catch (error) {
+        console.error("Erreur de chargement des amis", error);
+      }
+    };
+
+    loadFriendsAndConversations();
+  }, [user?.iduser]);
+  /* useEffect(() => {
     if (progressRef.current) {
       progressRef.current.style.width = "0%";
     }
-  }, [stepper]);
+  }, [stepper]);*/
   useEffect(() => {
     if (viewtextarea || selectbackground) {
       focus.current?.focus();
@@ -317,14 +578,23 @@ const Statuts = () => {
   };
   const handlechangephotostatut = (e) => {
     const file = e.target.files[0];
-    if (!file) {
-      return;
-    }
-    if (file) {
-      setprevimgstatut(URL.createObjectURL(file));
-      setviewphotoarea(true);
-    }
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setprevimgstatut(preview);
+    // Sauvegarder aussi l'objet File
+    setStatusStep((prev) => [
+      ...prev,
+      {
+        type: "image",
+        value: preview,
+        file: file,
+        mediatype: file.type,
+        time: valuetimer,
+      },
+    ]);
+    setviewphotoarea(true);
   };
+
   const handlechangephoto = () => {
     setviewtextarea(false);
     setSelectionOpt1(false);
@@ -352,11 +622,24 @@ const Statuts = () => {
     const url = URL.createObjectURL(file);
 
     setprevmediastatut(url);
-    setviewmediarea(true);
+
     setmediatype(file.type);
     setSelectedmedia(file);
     setMediaDuration(null);
-
+    setStatusStep((prev) => [
+      ...prev,
+      {
+        type: "media",
+        value: url,
+        file: file,
+        mediatype: file.type,
+        time:
+          mediaDuration && mediaDuration > 0
+            ? Math.min(mediaDuration, MAX_STATUS_TIME)
+            : valuetimer,
+      },
+    ]);
+    setviewmediarea(true);
     // On ne calcule une durée que pour audio/vidéo
     if (file.type.startsWith("audio/")) {
       const a = document.createElement("audio");
@@ -393,22 +676,6 @@ const Statuts = () => {
   const handleClose = () => {
     setOpen10(false);
     setstepper(0);
-    /* setStatusStep([]);
-    setsmstext("");
-    setselectbackground(null);
-    setprevimgstatut(null);
-    setprevmediastatut(null);
-    setmediatype(null);
-    setnamebutton("Créer un statut");
-    setSelectionOpt1(false);
-    setSelectionOpt2(false);
-    setviewtext(false);
-    setviewtextarea(false);
-    setviewcolor(false);
-    setviewbackground(false);
-    setviewphotoarea(false);
-    setviewmediarea(false);
-    setstatutvisible(false);*/
   };
   const handleClose1 = () => {
     setOpen11(false);
@@ -454,22 +721,64 @@ const Statuts = () => {
     }
   };
   const handleDeleteStatusPublish = () => {
-    const newSteps = [...statusPublish];
-    if (stepper >= 0 && stepper < newSteps.length) {
-      newSteps.splice(stepper, 1);
-    }
-    setStatusPublish(newSteps);
-    if (newSteps.length === 0) {
+    const updated = [...publishedItems];
+    updated.splice(stepper, 1);
+
+    setStatusPublish([
+      {
+        ...statusPublish[0],
+        items: updated,
+      },
+    ]);
+
+    if (updated.length === 0) {
       setOpen12(false);
       setstepper(0);
-    } else if (stepper >= newSteps.length) {
-      setstepper(newSteps.length - 1);
+    } else if (stepper >= updated.length) {
+      setstepper(updated.length - 1);
     }
   };
-  const handlepublish = () => {
+
+  const createStatusOnServer = async (items) => {
+    const formData = new FormData();
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    formData.append("expiresAt", expiresAt.toISOString());
+
+    items.forEach((item, index) => {
+      formData.append(`items[${index}][type]`, item.type);
+      formData.append(`items[${index}][order]`, index);
+      formData.append(`items[${index}][duration]`, item.time || 10);
+
+      if (item.type === "text") {
+        formData.append(`items[${index}][text]`, item.value);
+        if (item.color) formData.append(`items[${index}][color]`, item.color);
+        if (item.background)
+          formData.append(`items[${index}][backgroundUrl]`, item.background);
+      }
+
+      if (item.type === "media" || item.type === "image") {
+        if (item.file) {
+          formData.append("media", item.file); // 👈 IMPORTANT
+          formData.append(`items[${index}][mediatype]`, item.mediatype);
+        }
+      }
+    });
+
+    await axios.post("http://localhost:5000/status", formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  };
+
+  const handlepublish = async () => {
     const published = [];
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 1000 * 60 * 60 * 24);
+
+    // Préparer les items pour le serveur
+    const itemsForServer = [];
+
     statusStep.forEach((step) => {
       if (
         step.type === "media" &&
@@ -478,22 +787,31 @@ const Statuts = () => {
           step.mediatype.startsWith("video/")) &&
         mediaDuration > MAX_STATUS_TIME
       ) {
-        // ✅ DÉCOUPE UNIQUEMENT ICI
         const parts = splitMediaIntoStatuses({
           src: step.value,
           mediatype: step.mediatype,
           duration: mediaDuration,
         });
-        // Ajouter expiration à chaque segment
-        const partsWithExpiry = parts.map((part) => ({
-          ...part,
-          createdAt: now,
-          expiresAt: expiresAt,
-          viewed: false,
-        }));
 
-        published.push(...partsWithExpiry);
+        parts.forEach((part) => {
+          itemsForServer.push({
+            type: "media",
+            value: part.value,
+            mediatype: part.mediatype,
+            startTime: part.startTime,
+            endTime: part.endTime,
+            time: part.time,
+          });
+
+          published.push({
+            ...part,
+            createdAt: now,
+            expiresAt: expiresAt,
+            viewed: false,
+          });
+        });
       } else {
+        itemsForServer.push(step);
         published.push({
           ...step,
           createdAt: now,
@@ -503,19 +821,31 @@ const Statuts = () => {
       }
     });
 
-    setStatusPublish((prev) => [...prev, ...published]);
+    try {
+      // 1. Envoyer au serveur
+      await createStatusOnServer(itemsForServer);
+      toast.success("Statut publié avec succès!");
+      //recharger tous les statuts
+      await loadStatuses();
+      // 3. Réinitialiser
+      setOpen10(false);
+      setstepper(0);
+      setStatusStep([]);
+      setsmstext("");
+      setselectbackground(null);
+      setprevimgstatut(null);
+      setprevmediastatut(null);
+      setmediatype(null);
+      setstatutvisible(false);
+      setOpen12(false);
 
-    // reset
-    setOpen10(false);
-    setstepper(0);
-    setStatusStep([]);
-    setsmstext("");
-    setselectbackground(null);
-    setprevimgstatut(null);
-    setprevmediastatut(null);
-    setmediatype(null);
-    setstatutvisible(false);
+      // 4. Recharger les statuts
+      loadStatuses();
+    } catch (error) {
+      console.error("Erreur publication:", error);
+    }
   };
+
   // Effet pour supprimer les statuts expirés
   useEffect(() => {
     // Vérifier toutes les minutes
@@ -583,23 +913,24 @@ const Statuts = () => {
 
   useEffect(() => {
     if (!open12) return;
-    if (!statusPublish[stepper]) return;
+
+    const item = publishedItems[stepper];
+    if (!item) return;
 
     const markSeen = setTimeout(() => {
-      setStatusPublish((prev) =>
-        prev.map((s, i) => (i === stepper ? { ...s, viewed: true } : s))
-      );
+      item.viewed = true;
     }, 1000);
 
     return () => clearTimeout(markSeen);
-  }, [stepper, open12]);
-  useEffect(() => {
+  }, [stepper, open12, publishedItems]);
+  /*useEffect(() => {
     if (!open12) return;
 
-    const step = statusPublish[stepper];
-    if (!step) return;
+    const items = statusPublish[0]?.items;
+    if (!items || !items[stepper]) return;
 
-    // PAS de timer pour audio / vidéo
+    const step = items[stepper];
+
     if (
       step.type === "media" &&
       (step.mediatype?.startsWith("video/") ||
@@ -609,13 +940,54 @@ const Statuts = () => {
     }
 
     const timer = setTimeout(() => {
-      setstepper((prev) => (prev < statusPublish.length - 1 ? prev + 1 : prev));
+      setstepper((prev) => (prev < items.length - 1 ? prev + 1 : prev));
     }, step.time * 1000);
 
     return () => clearTimeout(timer);
-  }, [stepper, open12, statusPublish]);
+  }, [stepper, open12, statusPublish]);*/
 
   //decouper une video en status
+  useEffect(() => {
+    if (!open12) return;
+
+    const item = statusPublish[0]?.items[stepper];
+    if (!item) return;
+
+    if (
+      item.type === "media" &&
+      (item.mediatype?.startsWith("video/") ||
+        item.mediatype?.startsWith("audio/"))
+    )
+      return;
+
+    setProgress(0);
+    const duration = item.time * 1000;
+    const start = Date.now();
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const percent = Math.min((elapsed / duration) * 100, 100);
+      setProgress(percent);
+
+      if (percent >= 100) {
+        clearInterval(interval);
+        setstepper((prev) =>
+          prev < statusPublish[0].items.length - 1 ? prev + 1 : prev
+        );
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [stepper, open12]);
+  useEffect(() => {
+    setProgress(0);
+  }, [stepper]);
+  useEffect(() => {
+    if (openFriend) {
+      setProgress(0);
+    }
+  }, [stepper, openFriend]);
+
   const splitVideoIntoStatuses = (src, duration) => {
     const chunks = Math.ceil(duration / MAX_STATUS_TIME);
 
@@ -660,6 +1032,74 @@ const Statuts = () => {
       };
     });
   };
+  const getUserPhoto = (photo) => {
+    if (!photo) return img;
+    if (photo.startsWith("http")) return photo;
+    return `http://localhost:5000${photo}`;
+  };
+  const handleDownload = async () => {
+    try {
+      if (!openFriend || !activeStatus) {
+        toast.error("Aucun statut d'ami sélectionné");
+        return;
+      }
+
+      const item = activeStatus.items[stepper];
+      console.log("Item à télécharger:", item);
+
+      if (!item?.mediaUrl) {
+        toast.error("Aucun fichier à télécharger");
+        return;
+      }
+
+      // Extraire le nom de fichier
+      let filename;
+      if (item.mediaUrl.includes("/")) {
+        filename = item.mediaUrl.split("/").pop();
+      } else {
+        filename = item.mediaUrl;
+      }
+
+      // URL directe vers le fichier
+      const fileUrl = `http://localhost:5000/uploads/${filename}`;
+      console.log("Téléchargement depuis:", fileUrl);
+
+      // Méthode 1: Créer un lien et cliquer dessus
+      const link = document.createElement("a");
+      link.href = fileUrl;
+
+      // Forcer le téléchargement avec un nom de fichier personnalisé
+      const username = activeStatus.user?.username || "ami";
+      const timestamp = new Date().toISOString().split("T")[0];
+      const extension = filename.split(".").pop() || "file";
+      link.download = `status_${username}_${timestamp}_${stepper}.${extension}`;
+
+      // Ajouter au DOM et déclencher le téléchargement
+      document.body.appendChild(link);
+      link.click();
+
+      // Nettoyer
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+
+      toast.success("Téléchargement démarré!");
+    } catch (error) {
+      console.error("Erreur de téléchargement:", error);
+
+      // Fallback: ouvrir dans un nouvel onglet
+      const item = activeStatus?.items[stepper];
+      if (item?.mediaUrl) {
+        const filename = item.mediaUrl.includes("/")
+          ? item.mediaUrl.split("/").pop()
+          : item.mediaUrl;
+        window.open(`http://localhost:5000/uploads/${filename}`, "_blank");
+        toast.info("Ouverture dans un nouvel onglet...");
+      } else {
+        toast.error("Impossible de télécharger le fichier");
+      }
+    }
+  };
   return (
     <div className="MessageMain">
       <div className="MessageUser">
@@ -667,14 +1107,30 @@ const Statuts = () => {
           STATUTS
         </p>
         <div className="UserMain">
-          {users.map((p) => (
-            <div className={"userSelect"}>
-              <img src={p.image} alt="" />
-              <div className="userSelectText">
-                <p>{p.name}</p>
+          <div className="UserMain">
+            {friendStatuses.map((status) => (
+              <div
+                key={status.user.iduser}
+                className="userSelect"
+                onClick={() => openFriendStatus(status)}
+              >
+                {/* Votre avatar d'ami avec statut */}
+                <div
+                  className="status-avatar"
+                  style={getStatusBorder(statusPublish.length, viewedCount)}
+                >
+                  <img
+                    src={getUserPhoto(status.user.userphoto)}
+                    alt={status.user.username}
+                  />
+                </div>
+                <div className="userSelectText">
+                  <p>{status.user.username}</p>
+                  <small>{status.items?.length || 0} statut(s)</small>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         <div className="UserMain" style={{ marginTop: "30px" }}>
           <p style={{ textAlign: "center" }}>Mes statuts</p>
@@ -684,8 +1140,7 @@ const Statuts = () => {
             <div
               className="userSelect"
               onClick={() => {
-                const firstUnviewed = statusPublish.findIndex((s) => !s.viewed);
-                setstepper(firstUnviewed !== -1 ? firstUnviewed : 0);
+                setstepper(0);
                 setOpen12(true);
               }}
             >
@@ -693,11 +1148,11 @@ const Statuts = () => {
                 className="status-avatar"
                 style={getStatusBorder(statusPublish.length, viewedCount)}
               >
-                <img src={img} alt="" />
+                <img src={getUserPhoto(user.userphoto)} alt="" />
               </div>
               <div className="userSelectText">
-                <p>dimitri</p>
-                <small>{statusPublish.length} statut(s)</small>
+                <p>{user.username}</p>
+                <small>{statusPublish[0]?.items.length} statut(s)</small>
               </div>
             </div>
           ) : (
@@ -992,6 +1447,7 @@ const Statuts = () => {
               width: "100%",
               maxWidth: "800px",
               height: "auto",
+              maxHeight: "800px",
               position: "relative",
             },
           }}
@@ -1005,7 +1461,7 @@ const Statuts = () => {
               flexDirection: "column",
             }}
           >
-            {renderStep(statusPublish[stepper])}
+            {publishedItems[stepper] && renderStep(publishedItems[stepper])}
           </DialogContent>
           <DialogActions className="optionbtns">
             <Button
@@ -1019,16 +1475,19 @@ const Statuts = () => {
             >
               preview
             </Button>
-            {stepper < statusPublish.length - 1 && (
+            {stepper < publishedItems.length - 1 && (
               <Button
                 autoFocus
                 className="acceptbtn"
-                disabled={stepper >= statusPublish.length - 1}
+                disabled={stepper >= statusPublish[0]?.items.length - 1}
                 onClick={() => setstepper((prev) => prev + 1)}
                 style={{
-                  opacity: stepper === statusPublish.length - 1 ? 0 : 1,
+                  opacity:
+                    stepper === statusPublish[0]?.items.length - 1 ? 0 : 1,
                   cursor:
-                    stepper >= statusPublish.length - 1 ? "default" : "pointer",
+                    stepper >= statusPublish[0]?.items.length - 1
+                      ? "default"
+                      : "pointer",
                 }}
               >
                 next
@@ -1037,42 +1496,65 @@ const Statuts = () => {
           </DialogActions>
 
           <DialogActions className="optionbtntimer">
-            {statusPublish.map((s, index) => {
-              // Calculer la durée réelle pour l'animation
-              const segmentDuration =
-                s.endTime && s.startTime ? s.endTime - s.startTime : s.time;
+            {statusPublish[0]?.items.map((s, index) => (
+              <span
+                key={index}
+                className={`progress-seg ${
+                  index < stepper ? "done" : index === stepper ? "current" : ""
+                }`}
+                style={{ flexGrow: 1 }}
+                onClick={() => setstepper(index)}
+              >
+                <i
+                  className="progress-fill"
+                  style={{
+                    width:
+                      index < stepper
+                        ? "100%"
+                        : index === stepper
+                        ? `${progress}%`
+                        : "0%",
+                  }}
+                />
+              </span>
+            ))}
+          </DialogActions>
+          <div
+            style={{
+              padding: "10px",
+              borderTop: "1px solid #eee",
+              background: "#fafafa",
+            }}
+          >
+            <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              Vu par ({statusViews.length})
+            </p>
 
-              return (
-                <span
-                  key={index}
-                  className={`progress-seg ${
-                    index < stepper
-                      ? "done"
-                      : index === stepper
-                      ? "current"
-                      : ""
-                  }`}
-                  style={{ flexGrow: 1 }}
-                  onClick={() => {
-                    setstepper(index);
-                    // Pour les vidéos : repositionner au début du segment
-                    if (videoRef.current && s.startTime !== undefined) {
-                      videoRef.current.currentTime = s.startTime;
-                    }
+            {statusViews.length === 0 ? (
+              <small>Aucune vue pour le moment</small>
+            ) : (
+              statusViews.map((v) => (
+                <div
+                  key={v.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginBottom: "5px",
                   }}
                 >
-                  <i
-                    className="progress-fill"
-                    ref={index === stepper ? progressRef : null}
-                    style={{
-                      width: index < stepper ? "100%" : "0%",
-                    }}
+                  <img
+                    src={v.user?.userphoto || img}
+                    alt=""
+                    width={30}
+                    height={30}
+                    style={{ borderRadius: "50%" }}
                   />
-                </span>
-              );
-            })}
-          </DialogActions>
-
+                  <span>{v.user?.username}</span>
+                </div>
+              ))
+            )}
+          </div>
           <DialogActions className="optionbtn">
             <Button onClick={() => setOpen12(false)} className="retourbtn">
               retour
@@ -1080,6 +1562,97 @@ const Statuts = () => {
             <Button onClick={handleDeleteStatusPublish} className="rejectbtn">
               Supprimer
             </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {openFriend && activeStatus && (
+        <Dialog
+          open={openFriend}
+          onClose={() => setOpenFriend(false)}
+          sx={{
+            "& .MuiDialog-paper": {
+              width: "100%",
+              maxWidth: "800px",
+              height: "auto",
+              maxHeight: "800px",
+              position: "relative",
+            },
+          }}
+        >
+          <DialogContent
+            sx={{
+              width: "100%",
+              height: "100%",
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {renderStep(activeStatus.items[stepper])}
+          </DialogContent>
+          <DialogActions className="optionbtns">
+            <Button
+              disabled={stepper === 0}
+              onClick={() => setstepper((prev) => prev - 1)}
+              className="retourbtn"
+              style={{
+                opacity: stepper === 0 ? 0 : 1,
+                cursor: stepper === 0 ? "default" : "pointer",
+              }}
+            >
+              preview
+            </Button>
+            {stepper < activeStatus.items.length - 1 && (
+              <Button
+                autoFocus
+                className="acceptbtn"
+                disabled={stepper >= activeStatus.items.length - 1}
+                onClick={() => setstepper((prev) => prev + 1)}
+                style={{
+                  opacity: stepper === activeStatus.items.length - 1 ? 0 : 1,
+                  cursor:
+                    stepper >= activeStatus.items.length - 1
+                      ? "default"
+                      : "pointer",
+                }}
+              >
+                next
+              </Button>
+            )}
+          </DialogActions>
+          <DialogActions className="optionbtntimer">
+            {activeStatus?.items.map((s, index) => (
+              <span
+                key={index}
+                className={`progress-seg ${
+                  index < stepper ? "done" : index === stepper ? "current" : ""
+                }`}
+                style={{ flexGrow: 1 }}
+                onClick={() => setstepper(index)}
+              >
+                <i
+                  className="progress-fill"
+                  style={{
+                    width:
+                      index < stepper
+                        ? "100%"
+                        : index === stepper
+                        ? `${progress}%`
+                        : "0%",
+                  }}
+                />
+              </span>
+            ))}
+          </DialogActions>
+          <DialogActions className="optionbtn">
+            <Button onClick={() => setOpen12(false)} className="retourbtn">
+              retour
+            </Button>
+            {activeStatus.items[stepper]?.mediaUrl && (
+              <Button onClick={handleDownload} className="rejectbtn">
+                Télécharger
+              </Button>
+            )}
           </DialogActions>
         </Dialog>
       )}

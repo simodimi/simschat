@@ -16,9 +16,27 @@ const addStatusItem = async (req, res) => {
       });
     }
 
+    const mediaUrl = req.file ? `/uploads/status/${req.file.filename}` : null;
+
     const item = await StatusItem.create({
-      ...req.body,
       statusId,
+
+      order: req.body.order ?? 0,
+      type: req.body.type,
+
+      // TEXTE / BACKGROUND
+      text: req.body.text || null,
+      color: req.body.color || null,
+      backgroundUrl: req.body.backgroundUrl || null,
+
+      // MEDIA
+      mediaUrl,
+      mediaType: req.body.mediatype || null,
+
+      // DURÉE
+      duration: req.body.time || 10,
+      startTime: req.body.startTime || null,
+      endTime: req.body.endTime || null,
     });
 
     return res.status(201).json(item);

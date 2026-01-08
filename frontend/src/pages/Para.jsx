@@ -423,7 +423,7 @@ const Para = ({ setchoicebk }) => {
                   onChange={handleChangePicture}
                   style={{ display: "none" }}
                 />
-                {changepicture.photoUser.length > 0 && (
+                {changepicture.photoUser?.length > 0 && (
                   <div className="pictureparabtn">
                     <Button className="retourbtn" onClick={handlenewpicture}>
                       changer la photo

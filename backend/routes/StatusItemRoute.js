@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const statusItemController = require("../controllers/statusItemController");
+const statusItemController = require("../controllers/StatusItemcontroller");
 const { verifyToken } = require("../middleware/auth");
 const { uploadStatusMedia } = require("../middleware/upload");
 

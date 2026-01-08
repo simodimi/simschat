@@ -257,9 +257,7 @@ const updateUser = async (req, res) => {
     }
 
     if (req.file) {
-      updateData.userphoto = `${req.protocol}://${req.get("host")}/uploads/${
-        req.file.filename
-      }`;
+      updateData.userphoto = `/uploads/${req.file.filename}`;
     }
 
     const [updated] = await User.update(updateData, {

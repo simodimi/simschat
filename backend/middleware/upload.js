@@ -52,7 +52,7 @@ const uploadMessageFile = upload.single("file");
 //background
 const uploadBackground = upload.single("background");
 // Middleware pour les médias de status
-const uploadStatusMedia = upload.array("media", 10); // max 10 fichiers
+const uploadStatusMedia = upload.array("media", 30); // max 10 fichiers
 
 // Middleware de validation du fichier
 const validateFile = (req, res, next) => {

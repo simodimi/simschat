@@ -125,7 +125,7 @@ const Statuts = () => {
       // au moins un item non vu
       return status.items.some((item) => !item.viewed);
     });
-
+    console.log("hasUnseen:", hasUnseen, friendStatuses);
     setHasUnseenStatus(hasUnseen);
   }, [friendStatuses]);
 
@@ -142,21 +142,38 @@ const Statuts = () => {
 
   useEffect(() => {
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket || !user?.iduser) return;
+
+    socket.emit("join_user_room", user.iduser);
 
     const handleNewStatus = ({ userId }) => {
+      console.log("📢 Nouveau statut de:", userId);
+
+      // Forcer le rechargement immédiat
       loadStatuses();
+
+      // Mettre à jour newStatusUsers pour la notification visuelle
       setNewStatusUsers((prev) =>
         prev.includes(userId) ? prev : [...prev, userId]
       );
+
+      // Forcer le recalcul des statuts non vus
+      setTimeout(() => {
+        loadStatuses();
+      }, 500);
     };
 
     const handleDeletedStatus = () => {
+      console.log("🗑️ Statut supprimé détecté");
       loadStatuses();
     };
 
-    const handleViewedStatus = () => {
-      loadStatuses();
+    const handleViewedStatus = ({ statusItemId, viewerId }) => {
+      console.log("👁️ Statut vu par:", viewerId);
+      // Mettre à jour localement pour réactivité
+      if (viewerId !== user.iduser) {
+        loadStatuses();
+      }
     };
 
     socket.on("status:new", handleNewStatus);
@@ -167,8 +184,9 @@ const Statuts = () => {
       socket.off("status:new", handleNewStatus);
       socket.off("status:deleted", handleDeletedStatus);
       socket.off("status:viewed", handleViewedStatus);
+      socket.emit("leave_user_room", user.iduser);
     };
-  }, []);
+  }, [user?.iduser]); // IMPORTANT: dépendre de user.iduser
 
   const loadStatuses = async () => {
     const res = await axios.get("http://localhost:5000/status/active", {
@@ -286,12 +304,34 @@ const Statuts = () => {
   useEffect(() => {
     loadStatuses();
   }, []);
+  // Dans l'effet qui marque comme vu
   useEffect(() => {
-    if (!activeStatus) return;
+    if (!activeStatus || !openFriend) return;
 
     const item = activeStatus.items[stepper];
     if (!item) return;
 
+    // Si déjà vu, ne rien faire
+    if (item.viewed) return;
+
+    console.log("Marquer comme vu:", item.id);
+
+    // 1. Mettre à jour localement IMMÉDIATEMENT
+    setFriendStatuses((prev) =>
+      prev.map((status) => {
+        if (status.user.iduser === activeStatus.user.iduser) {
+          return {
+            ...status,
+            items: status.items.map((it) =>
+              it.id === item.id ? { ...it, viewed: true } : it
+            ),
+          };
+        }
+        return status;
+      })
+    );
+
+    // 2. Envoyer au serveur
     axios
       .post(
         `http://localhost:5000/status-item-view/${item.id}`,
@@ -299,9 +339,12 @@ const Statuts = () => {
         { withCredentials: true }
       )
       .then(() => {
-        loadStatuses();
+        console.log("✅ Item marqué comme vu sur le serveur");
+      })
+      .catch((err) => {
+        console.error("❌ Erreur marquage vu:", err);
       });
-  }, [stepper]);
+  }, [stepper, activeStatus, openFriend]); // Ajouter openFriend
   const getViews = async (itemId) => {
     const res = await axios.get(
       `http://localhost:5000/status-item-view/${itemId}`,
@@ -312,17 +355,20 @@ const Statuts = () => {
 
   const grouped = friendStatuses;
 
+  // Dans Statuts.jsx, ajoutez un useEffect pour charger les vues
   useEffect(() => {
-    if (!open12) return;
-    const item = publishedItems[stepper];
-    if (!item?.id) return;
+    if (!open12 || !publishedItems[stepper]?.id) return;
 
     const loadViews = async () => {
       try {
-        const views = await getViews(item.id);
-        setStatusViews(views);
+        const res = await axios.get(
+          `http://localhost:5000/status-item-view/${publishedItems[stepper].id}`,
+          { withCredentials: true }
+        );
+        console.log("Vues chargées:", res.data);
+        setStatusViews(res.data);
       } catch (err) {
-        console.error("Erreur chargement vues", err);
+        console.error("Erreur chargement vues:", err);
       }
     };
 
@@ -908,10 +954,11 @@ const Statuts = () => {
   }, []);
   const viewedCount =
     statusPublish[0]?.items.filter((s) => s.viewed).length || 0;
-  const getStatusBorder = (total, viewedCount = 0) => {
+  // Dans Statuts.jsx, modifiez la fonction getStatusBorder
+  const getStatusBorder = (total, viewedCount = 0, isOwner = false) => {
     if (total === 0) return {};
 
-    const gap = 5; // taille de l’écart en degrés
+    const gap = 5;
     const angle = 360 / total;
     let gradient = [];
 
@@ -919,7 +966,13 @@ const Statuts = () => {
       const start = i * angle;
       const end = start + angle - gap;
 
-      const color = i < viewedCount ? "#ccc" : "green";
+      let color;
+      if (isOwner) {
+        color = "#ccc"; // Toujours blanc pour le créateur
+      } else {
+        // Pour les amis : vu = vert, non-vu = gris
+        color = i < viewedCount ? "green" : "#ccc";
+      }
 
       gradient.push(
         `${color} ${start}deg ${end}deg`,
@@ -1151,7 +1204,8 @@ const Statuts = () => {
                 className="status-avatar"
                 style={getStatusBorder(
                   statusPublish[0]?.items.length,
-                  viewedCount
+                  statusPublish[0]?.items.length,
+                  true
                 )}
               >
                 <img src={getUserPhoto(user.userphoto)} alt="" />

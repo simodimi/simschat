@@ -47,6 +47,23 @@ const getItemViews = async (req, res) => {
   try {
     const { statusItemId } = req.params;
 
+    // Vérifiez que l'utilisateur est le propriétaire de l'item
+    const item = await StatusItem.findByPk(statusItemId, {
+      include: {
+        model: Status,
+        as: "status",
+      },
+    });
+
+    if (!item) {
+      return res.status(404).json({ message: "Item introuvable" });
+    }
+
+    // Seul le propriétaire peut voir les vues
+    if (item.status.userId !== req.user.iduser) {
+      return res.status(403).json({ message: "Accès non autorisé" });
+    }
+
     const views = await StatusView.findAll({
       where: { statusItemId },
       include: {

@@ -81,6 +81,7 @@ const createStatus = async (req, res) => {
 
       global.io.to(`user_${friendId}`).emit("status:new", {
         userId: req.user.iduser,
+        username: req.user.username,
         statusId: status.id,
         timestamp: new Date().toISOString(),
       });
@@ -194,61 +195,6 @@ const getActiveStatuses = async (req, res) => {
       .json({ message: "Erreur de récupération des status" });
   }
 };
-
-/*// Récupérer les status actifs (non expirés)
-const getActiveStatuses = async (req, res) => {
-  try {
-    const now = new Date();
-    const userId = req.user.iduser;
-
-    // 1️⃣ Récupérer les amis acceptés
-    const friends = await Friends.findAll({
-      where: {
-        status: "accepted",
-        [Op.or]: [{ requesterId: userId }, { addresseeId: userId }],
-      },
-    });
-
-    // 2️⃣ Construire la liste des users autorisés
-    const allowedUserIds = friends.map((f) =>
-      f.requesterId === userId ? f.addresseeId : f.requesterId
-    );
-
-    // 3️⃣ IMPORTANT : ajouter soi-même
-    allowedUserIds.push(userId);
-
-    // 4️⃣ Récupérer les statuts visibles
-    const statuses = await Status.findAll({
-      where: {
-        isPublished: true,
-        expiresAt: { [Op.gt]: now },
-        userId: {
-          [Op.in]: allowedUserIds,
-        },
-      },
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["iduser", "username", "userphoto"],
-        },
-        {
-          model: StatusItem,
-          as: "items",
-          order: [["order", "ASC"]],
-        },
-      ],
-      order: [["createdAt", "DESC"]],
-    });
-
-    return res.status(200).json(statuses);
-  } catch (error) {
-    console.error("getActiveStatuses error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur de récupération des status" });
-  }
-};*/
 
 // Supprimer un status
 const deleteStatus = async (req, res) => {

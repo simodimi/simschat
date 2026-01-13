@@ -17,10 +17,10 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import Button from "../containers/Button.jsx";
-import { useAuth } from "../pages/AuthContextUser.jsx";
+import { useAuth, getSocket } from "../pages/AuthContextUser.jsx";
 import axios from "axios";
-import { io } from "socket.io-client";
 import { toast } from "react-toastify";
+import { useFriendRequests } from "./FriendRequestContext.jsx";
 
 const Message = ({ choicebk, clickuser }) => {
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -38,7 +38,6 @@ const Message = ({ choicebk, clickuser }) => {
   const [viewOption, setViewOption] = useState(null);
   const [uploadingMessages, setUploadingMessages] = useState({});
   const [copymedia, setcopymedia] = useState(null);
-  const [socket, setSocket] = useState(null);
   const [open10, setOpen10] = useState(false);
   const scrollcopy = useRef({});
   const refhide = useRef(null);
@@ -48,6 +47,7 @@ const Message = ({ choicebk, clickuser }) => {
   const refslider = useRef(null);
   const [showphoto, setshowphoto] = useState(null);
   const { user } = useAuth();
+  const { setnumbersms, onlineUsers } = useFriendRequests();
 
   // Récupérer la conversation actuelle
   const currentMessages = conversations[selectUser] || [];
@@ -64,6 +64,8 @@ const Message = ({ choicebk, clickuser }) => {
   const handlechangePhoto = (e) => {
     ref.current.click();
   };
+  //
+
   // Formate la date ici aussi
   const formatMessage = (message) => {
     return {
@@ -74,6 +76,13 @@ const Message = ({ choicebk, clickuser }) => {
       }),
     };
   };
+  useEffect(() => {
+    const distinctUnreadUsers = Object.values(unreadCounts).filter(
+      (count) => count > 0
+    ).length;
+
+    setnumbersms(distinctUnreadUsers);
+  }, [unreadCounts]);
   useEffect(() => {
     const loadUnreadCounts = async () => {
       const res = await axios.get("http://localhost:5000/message/unread", {
@@ -86,71 +95,6 @@ const Message = ({ choicebk, clickuser }) => {
   }, []);
 
   // Initialiser Socket.io
-  useEffect(() => {
-    if (!user?.iduser) return;
-
-    const newSocket = io("http://localhost:5000", {
-      withCredentials: true,
-      query: { userId: user.iduser },
-    });
-
-    setSocket(newSocket);
-
-    // Rejoindre la room de l'utilisateur
-    newSocket.emit("join_user_room", user.iduser);
-
-    // Écouter les nouveaux messages
-    newSocket.on("new_message", (message) => {
-      if (message.receiverId === user.iduser) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [message.senderId]: (prev[message.senderId] || 0) + 1,
-        }));
-      }
-      // Vérifier si le message concerne l'utilisateur actuel
-      if (
-        message.receiverId === user.iduser ||
-        message.senderId === user.iduser
-      ) {
-        const otherUserId =
-          message.senderId === user.iduser
-            ? message.receiverId
-            : message.senderId;
-
-        // Formate la date
-        const formattedMessage = {
-          ...message,
-          datesms: new Date(message.createdAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-
-        // Mettre à jour la conversation correspondante
-        setConversations((prev) => ({
-          ...prev,
-          [otherUserId]: [...(prev[otherUserId] || []), formattedMessage],
-        }));
-      }
-    });
-
-    // Écouter les messages supprimés
-    newSocket.on("message_deleted", (updatedMessage) => {
-      setConversations((prev) => {
-        const newConversations = { ...prev };
-        Object.keys(newConversations).forEach((userId) => {
-          newConversations[userId] = newConversations[userId].map((msg) =>
-            msg.id === updatedMessage.id ? updatedMessage : msg
-          );
-        });
-        return newConversations;
-      });
-    });
-
-    return () => {
-      newSocket.disconnect();
-    };
-  }, [user?.iduser]);
 
   // Charger les amis et leurs conversations
   useEffect(() => {
@@ -204,7 +148,8 @@ const Message = ({ choicebk, clickuser }) => {
     };
 
     loadFriendsAndConversations();
-
+    const socket = getSocket();
+    if (!socket) return;
     if (socket) {
       socket.on("friends_updated", loadFriendsAndConversations);
     }
@@ -214,7 +159,7 @@ const Message = ({ choicebk, clickuser }) => {
         socket.off("friends_updated", loadFriendsAndConversations);
       }
     };
-  }, [user?.iduser, socket]);
+  }, [user?.iduser]);
 
   // Gérer le clic sur un ami depuis la liste d'amis
   useEffect(() => {
@@ -606,7 +551,11 @@ const Message = ({ choicebk, clickuser }) => {
             <div className="MessageWrittingHeader">
               <div className="ImageSmsHeader">
                 <img src={selectUserName.image} alt="" />
-                <span></span>
+                <span
+                  className={
+                    onlineUsers[selectUserName.id] ? "online" : "offline"
+                  }
+                ></span>
               </div>
               <p>{selectUserName.name}</p>
             </div>

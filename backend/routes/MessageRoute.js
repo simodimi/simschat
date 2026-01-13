@@ -29,7 +29,19 @@ router.put(
   verifyToken,
   messageController.markAsRead
 );
-
+// Récupérer les messages médias d'une conversation
+router.get(
+  "/medias/:friendId",
+  verifyToken,
+  messageController.getMediaMessages
+);
+//
+// Récupérer la date de la dernière conversation avec un ami
+router.get(
+  "/last-exchange/:friendId",
+  verifyToken,
+  messageController.getLastConversationDate
+);
 // Supprimer un message
 router.delete("/:messageId", verifyToken, messageController.deleteMessage);
 module.exports = router;

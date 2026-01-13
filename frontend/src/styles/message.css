@@ -111,13 +111,13 @@
   background-color: honeydew;
   object-fit: cover;
 }
-.ImageSmsHeader span {
+
+.online {
   position: absolute;
   top: 0px;
   right: 0px;
   width: 15px;
   height: 15px;
-  background-color: green;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -125,6 +125,22 @@
   text-align: center;
   color: white;
   font-size: 10px;
+  background-color: green;
+}
+.offline {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  font-size: 10px;
+  background-color: none;
 }
 .MessageWrittingHome {
   position: absolute;

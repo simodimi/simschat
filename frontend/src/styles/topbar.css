@@ -52,13 +52,6 @@
   position: absolute;
   top: 0;
   right: -20px;
-  background-color: green;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center !important;
-  align-items: center !important;
   color: white;
   font-size: 10px;
 }
@@ -71,16 +64,26 @@
   position: absolute;
   top: 5px;
   right: -10px;
-  background-color: green;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
   color: white;
   font-size: 10px;
+}
+.dot-green {
+  background: #00c853;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.dot-white {
+  background: white;
+  display: none;
 }
 #texthover {
   position: absolute;

@@ -14,6 +14,8 @@ import ProtectedRouteUser from "./pages/ProtectedRouteUser";
 import { AuthProviderUser } from "./pages/AuthContextUser";
 import ConfirmAccount from "./pages/ConfirmAccount";
 import Waiting from "./containers/Waiting";
+import { FriendRequestProvider } from "./pages/FriendRequestContext";
+import { StatusProvider } from "./pages/StatusContext";
 
 function App() {
   const [choicebk, setchoicebk] = useState(null);
@@ -24,56 +26,63 @@ function App() {
     <>
       <BrowserRouter>
         <AuthProviderUser>
-          <Routes>
-            {/* routes publique */}
-            <Route path="/" element={<Connexion />} />
-            <Route path="/inscription" element={<Inscription />} />
-            <Route path="/forgetpassword" element={<Forgetpassword />} />
-            <Route path="/wait" element={<Waiting />} />
-            <Route path="/confirmation/:token" element={<ConfirmAccount />} />
-            {/* routes privee */}
-            <Route
-              path="/*"
-              element={
-                <ProtectedRouteUser>
-                  <div className="generalMain">
-                    <div className="siderbarMain">
-                      <Siderbar />
-                    </div>
-                    <div className="principalMain">
-                      <Routes>
-                        <Route
-                          path="/message"
-                          element={
-                            <Message
-                              choicebk={choicebk}
-                              adduser={adduser}
-                              clickuser={clickuser}
+          <FriendRequestProvider>
+            <StatusProvider>
+              <Routes>
+                {/* routes publique */}
+                <Route path="/" element={<Connexion />} />
+                <Route path="/inscription" element={<Inscription />} />
+                <Route path="/forgetpassword" element={<Forgetpassword />} />
+                <Route path="/wait" element={<Waiting />} />
+                <Route
+                  path="/confirmation/:token"
+                  element={<ConfirmAccount />}
+                />
+                {/* routes privee */}
+                <Route
+                  path="/*"
+                  element={
+                    <ProtectedRouteUser>
+                      <div className="generalMain">
+                        <div className="siderbarMain">
+                          <Siderbar />
+                        </div>
+                        <div className="principalMain">
+                          <Routes>
+                            <Route
+                              path="/message"
+                              element={
+                                <Message
+                                  choicebk={choicebk}
+                                  adduser={adduser}
+                                  clickuser={clickuser}
+                                />
+                              }
                             />
-                          }
-                        />
-                        <Route path="/statuts" element={<Statuts />} />
-                        <Route
-                          path="/para"
-                          element={<Para setchoicebk={setchoicebk} />}
-                        />
-                        <Route
-                          path="/ami"
-                          element={
-                            <Ami
-                              setadduser={setadduser}
-                              setclickuser={setclickuser}
+                            <Route path="/statuts" element={<Statuts />} />
+                            <Route
+                              path="/para"
+                              element={<Para setchoicebk={setchoicebk} />}
                             />
-                          }
-                        />
-                      </Routes>
-                    </div>
-                  </div>
-                </ProtectedRouteUser>
-              }
-            />
-          </Routes>
-          <Notification />
+                            <Route
+                              path="/ami"
+                              element={
+                                <Ami
+                                  setadduser={setadduser}
+                                  setclickuser={setclickuser}
+                                />
+                              }
+                            />
+                          </Routes>
+                        </div>
+                      </div>
+                    </ProtectedRouteUser>
+                  }
+                />
+              </Routes>
+              <Notification />
+            </StatusProvider>
+          </FriendRequestProvider>
         </AuthProviderUser>
       </BrowserRouter>
     </>

@@ -185,9 +185,34 @@ app.use("/status-item-view", verifyToken, statusViewRoute);
 app.use("/message", verifyToken, messageLimiter, messageRoute);
 app.use("/friends", friendRoute);
 
+app.get("/online-users", verifyToken, (req, res) => {
+  res.json([...onlineUsers.keys()]);
+});
+
+const onlineUsers = new Map(); // userId => socketId
 io.on("connection", (socket) => {
+  const userId = socket.handshake.query.userId;
+
+  if (userId) {
+    onlineUsers.set(userId, socket.id);
+
+    // notifier tout le monde
+    io.emit("user_online", userId);
+  }
+  socket.on("get_online_users", () => {
+    socket.emit("online_users", [...onlineUsers.keys()]);
+  });
+
   socket.on("disconnect", () => {
-    // Code de déconnexion
+    for (const [id, sId] of onlineUsers.entries()) {
+      if (sId === socket.id) {
+        onlineUsers.delete(id);
+
+        // notifier tout le monde
+        io.emit("user_offline", id);
+        break;
+      }
+    }
   });
 
   socket.on("join_friends_room", () => socket.join("friends_room"));

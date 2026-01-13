@@ -4,6 +4,7 @@ const Status = require("../models/Status");
 const StatusItem = require("../models/StatusItem");
 const Friends = require("../models/Friends");
 const User = require("../models/User");
+const StatusView = require("../models/StatusView");
 const createStatus = async (req, res) => {
   try {
     let { expiresAt, items } = req.body;
@@ -144,7 +145,12 @@ const getActiveStatuses = async (req, res) => {
       ],
       order: [["createdAt", "DESC"]],
     });
+    const views = await StatusView.findAll({
+      where: { viewerId: userId },
+      attributes: ["statusItemId"],
+    });
 
+    const viewedItemIds = new Set(views.map((v) => v.statusItemId));
     const formattedStatuses = statuses.map((status) => ({
       id: status.id,
       createdAt: status.createdAt,
@@ -173,6 +179,10 @@ const getActiveStatuses = async (req, res) => {
         endTime: i.endTime,
 
         order: i.order,
+        viewed:
+          status.user.iduser === userId
+            ? true // créateur → toujours vu
+            : viewedItemIds.has(i.id), // ami → dépend des vues
       })),
     }));
 

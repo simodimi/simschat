@@ -1,4 +1,5 @@
 const Friends = require("../models/Friends");
+const { Message } = require("../models/Message");
 const User = require("../models/User");
 const { Op } = require("sequelize");
 
@@ -316,6 +317,43 @@ const getFriends = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
+const getFriendshipDate = async (req, res) => {
+  try {
+    const userId = req.user.iduser;
+    const { friendId } = req.params;
+
+    const friendship = await Friends.findOne({
+      where: {
+        status: "accepter",
+        [Op.or]: [
+          { requesterId: userId, addresseeId: friendId },
+          { requesterId: friendId, addresseeId: userId },
+        ],
+      },
+      attributes: ["acceptedAt"],
+    });
+
+    if (!friendship || !friendship.acceptedAt) {
+      return res.status(404).json({
+        message: "Amitié non trouvée",
+      });
+    }
+
+    const date = new Date(friendship.acceptedAt);
+
+    res.json({
+      acceptedAt: friendship.acceptedAt,
+      formattedDate: {
+        day: date.getDate(),
+        month: date.getMonth() + 1,
+        year: date.getFullYear(),
+      },
+    });
+  } catch (error) {
+    console.error("Erreur getFriendshipDate:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
 
 module.exports = {
   sendFriendRequest,
@@ -324,4 +362,5 @@ module.exports = {
   respondToRequest,
   cancelRequest,
   getFriends,
+  getFriendshipDate,
 };

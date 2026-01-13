@@ -137,6 +137,8 @@ const loginUser = async (req, res) => {
       iduser: user.iduser,
       username: user.username,
       useremail: user.useremail,
+      userphoto: user.userphoto,
+      background_image: user.background_image,
     });
   } catch (error) {
     console.error("erreur lors de la connexion de l'utilisateur", error);
@@ -257,7 +259,9 @@ const updateUser = async (req, res) => {
     }
 
     if (req.file) {
-      updateData.userphoto = `/uploads/${req.file.filename}`;
+      updateData.userphoto = `${req.protocol}://${req.get("host")}/uploads/${
+        req.file.filename
+      }`; //`/uploads/${req.file.filename}`;
     }
 
     const [updated] = await User.update(updateData, {
@@ -270,7 +274,13 @@ const updateUser = async (req, res) => {
 
     // ✅ récupérer l'utilisateur à jour
     const user = await User.findByPk(req.params.iduser, {
-      attributes: ["iduser", "username", "useremail", "userphoto"],
+      attributes: [
+        "iduser",
+        "username",
+        "useremail",
+        "userphoto",
+        "background_image",
+      ],
     });
 
     return res.status(200).json({
@@ -287,7 +297,13 @@ const checkTokenValidity = async (req, res) => {
   try {
     // Ici verifyToken a déjà été exécuté (middleware), et req.admin est present
     const user = await User.findByPk(req.user.iduser, {
-      attributes: ["iduser", "username", "useremail"],
+      attributes: [
+        "iduser",
+        "username",
+        "useremail",
+        "userphoto",
+        "background_image",
+      ],
     });
     if (!user) {
       return res

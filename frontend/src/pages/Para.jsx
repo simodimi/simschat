@@ -11,6 +11,7 @@ import on from "../assets/onlight.jpg";
 import off from "../assets/offlight.jpg";
 import Box from "@mui/material/Box";
 import axios from "axios";
+import img from "../assets/ami.png";
 import { toast } from "react-toastify";
 import { useAuth } from "../pages/AuthContextUser.jsx";
 
@@ -188,11 +189,11 @@ const Para = ({ setchoicebk }) => {
     }
   };
   const handledeletepicture = () => {
-    setpicture(null);
+    setpicture(img);
     setchangepicture({ ...changepicture, photoUser: "" });
   };
   const handledeletepicturebk = () => {
-    setpicturebk(null);
+    setpicturebk(img);
     setchangepicturebk("");
   };
   const handlemodifyname = () => {
@@ -293,6 +294,11 @@ const Para = ({ setchoicebk }) => {
           },
         }
       );
+      // Mettre à jour l'aperçu avec la nouvelle image
+      if (changepicture.photoUser) {
+        const newPhotoUrl = URL.createObjectURL(changepicture.photoUser);
+        setpicture(newPhotoUrl);
+      }
       setuser((prev) => ({ ...prev, ...res.data.user }));
       toast.success("Profil mis à jour avec succès");
       handlenavigate();
@@ -334,6 +340,10 @@ const Para = ({ setchoicebk }) => {
       );
 
       setchoicebk(res.data.background_image);
+      setuser((prev) => ({
+        ...prev,
+        background_image: res.data.background_image,
+      }));
       toast.success("Fond d'écran sauvegardé");
       handlenavigate();
     } catch (err) {
@@ -344,6 +354,7 @@ const Para = ({ setchoicebk }) => {
   useEffect(() => {
     if (user?.background_image) {
       setchoicebk(user.background_image);
+      setpicturebk(getUserPhoto(user.background_image));
     }
   }, [user]);
   const handledefaultbk = async () => {
@@ -351,6 +362,8 @@ const Para = ({ setchoicebk }) => {
       withCredentials: true,
     });
     setchoicebk(null);
+    setpicturebk(img);
+    toast.success("Fond d'écran réinitialisé par défaut");
   };
   const handlelogin = () => {
     logout();
@@ -374,6 +387,16 @@ const Para = ({ setchoicebk }) => {
       console.error(error);
     }
   };
+  const getUserPhoto = (photo) => {
+    if (!photo) return img;
+    if (photo.startsWith("http")) return photo;
+    return `http://localhost:5000${photo}`;
+  };
+  useEffect(() => {
+    if (user?.userphoto) {
+      setpicture(getUserPhoto(user.userphoto));
+    }
+  }, [user]);
   return (
     <div className="headerpara">
       {!para0 && (
@@ -402,18 +425,13 @@ const Para = ({ setchoicebk }) => {
                 <div className="changePicturepara" onClick={handlenewpicture}>
                   <span>cliquer pour ajouter une photo</span>
                   <img src={plus} alt="" />
-                  {changepicture.photoUser && (
-                    <div
-                      className="newpicture"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {picture ? (
-                        <img src={picture} alt="" />
-                      ) : (
-                        <img src={`${user.userphoto}`} alt="" />
-                      )}
-                    </div>
-                  )}
+
+                  <div className="newpicture">
+                    <img
+                      src={picture || getUserPhoto(user.userphoto)}
+                      alt="photo de profil"
+                    />
+                  </div>
                 </div>
                 <input
                   type="file"
@@ -423,7 +441,7 @@ const Para = ({ setchoicebk }) => {
                   onChange={handleChangePicture}
                   style={{ display: "none" }}
                 />
-                {changepicture.photoUser?.length > 0 && (
+                {changepicture.photoUser && (
                   <div className="pictureparabtn">
                     <Button className="retourbtn" onClick={handlenewpicture}>
                       changer la photo
@@ -559,18 +577,13 @@ const Para = ({ setchoicebk }) => {
                 <div className="changePicturepara" onClick={handlenewpicturebk}>
                   <span>cliquer pour ajouter une photo</span>
                   <img src={plus} alt="" />
-                  {changepicturebk && (
-                    <div
-                      className="newpicture"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {picturebk ? (
-                        <img src={picturebk} alt="" />
-                      ) : (
-                        <img src={`${user.background_image}`} alt="" />
-                      )}
-                    </div>
-                  )}
+
+                  <div className="newpicture">
+                    <img
+                      src={picturebk || getUserPhoto(user.background_image)}
+                      alt="photo de profil"
+                    />
+                  </div>
                 </div>
                 <input
                   type="file"

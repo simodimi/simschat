@@ -6,11 +6,14 @@ import para from "../assets/para.png";
 import logo from "../assets/logochat.png";
 import groupe from "../assets/groupe.png";
 import "../styles/topbar.css";
+import { useFriendRequests } from "../pages/FriendRequestContext";
+import { useStatus } from "../pages/StatusContext";
 import { Link, useLocation } from "react-router-dom";
 const Siderbar = () => {
-  const [count, setcount] = useState(5);
   const [name, setname] = useState("name1");
   const location = useLocation();
+  const { pendingCount, numbersms } = useFriendRequests();
+  const { hasUnseenStatus } = useStatus();
 
   useEffect(() => {
     if (location.pathname === "/message") setname("name1");
@@ -31,13 +34,12 @@ const Siderbar = () => {
             <div className="SiderbarTopOption">
               <img src={sms} alt="" />
               <p>Messages</p>
-              {count >= 1 ? (
-                <div className="SiderbarTopOptionNumber">
-                  <span>{count}</span>
-                </div>
-              ) : (
-                <span></span>
-              )}
+
+              <div className="SiderbarTopOptionNumber">
+                <span className={numbersms > 0 ? "dot-green" : "dot-white"}>
+                  {numbersms}
+                </span>
+              </div>
             </div>
             <p id="texthover">Messages</p>
           </Link>
@@ -52,7 +54,9 @@ const Siderbar = () => {
               <img src={statut} alt="" />
               <p>Statuts</p>
               <div className="SiderbarTopOptionNumbers">
-                <span></span>
+                <span
+                  className={hasUnseenStatus ? "dot-green" : "dot-white"}
+                ></span>
               </div>
             </div>
             <p id="texthover">Statuts</p>
@@ -68,7 +72,9 @@ const Siderbar = () => {
               <img src={ami} alt="" />
               <p>Ami(e)s</p>
               <div className="SiderbarTopOptionNumbers">
-                <span></span>
+                <span
+                  className={pendingCount > 0 ? "dot-green" : "dot-white"}
+                ></span>
               </div>
             </div>
             <p id="texthover">Ami(e)s</p>

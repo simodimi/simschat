@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const friendController = require("../controllers/friendController");
+const friendController = require("../controllers/Friendcontroller");
 const { verifyToken } = require("../middleware/auth");
 const { friendRequestLimiter } = require("../middleware/rateLimit");
 
@@ -37,6 +37,10 @@ router.delete(
   friendRequestLimiter,
   friendController.cancelRequest
 );
+
+//date d'ajout d'un ami
+router.get("/since/:friendId", verifyToken, friendController.getFriendshipDate);
+//derniere conversation avec un ami
 
 // Liste des amis
 router.get("/", verifyToken, friendController.getFriends);

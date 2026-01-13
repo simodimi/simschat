@@ -374,6 +374,72 @@ const markAsRead = async (req, res) => {
     res.status(500).json({ message: "Erreur mark as read" });
   }
 };
+const getMediaMessages = async (req, res) => {
+  try {
+    const userId = req.user.iduser;
+    const { friendId } = req.params;
+
+    const medias = await Message.findAll({
+      where: {
+        [Op.or]: [
+          { senderId: userId, receiverId: friendId },
+          { senderId: friendId, receiverId: userId },
+        ],
+        fileUrl: { [Op.ne]: null },
+        isDeleted: false,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(medias);
+  } catch (e) {
+    res.status(500).json({ message: "Erreur récupération médias" });
+  }
+};
+const getLastConversationDate = async (req, res) => {
+  try {
+    const userId = req.user?.iduser;
+    const { friendId } = req.params;
+
+    // 🔐 sécurité
+    if (!userId || !friendId) {
+      return res.status(400).json({ message: "Paramètres invalides" });
+    }
+
+    // 🔍 dernier message entre les deux users
+    const lastMessage = await Message.findOne({
+      where: {
+        [Op.or]: [
+          { senderId: userId, receiverId: friendId },
+          { senderId: friendId, receiverId: userId },
+        ],
+        isDeleted: false,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    // 🟡 aucun échange
+    if (!lastMessage) {
+      return res.json({ formattedDate: null });
+    }
+
+    const date = new Date(lastMessage.createdAt);
+
+    res.json({
+      formattedDate: {
+        day: date.getDate(),
+        month: date.getMonth() + 1,
+        year: date.getFullYear(),
+        hours: date.getHours(),
+        minutes: date.getMinutes(),
+        seconds: date.getSeconds(),
+      },
+    });
+  } catch (error) {
+    console.error("❌ getLastConversationDate error:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
 
 module.exports = {
   sendMessage,
@@ -381,4 +447,6 @@ module.exports = {
   deleteMessage,
   getUnreadCount,
   markAsRead,
+  getMediaMessages,
+  getLastConversationDate,
 };

@@ -21,6 +21,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../pages/AuthContextUser";
 import { getSocket } from "../pages/AuthContextUser";
+import { useStatus } from "./StatusContext";
 
 const Statuts = () => {
   const couleur = [
@@ -94,6 +95,7 @@ const Statuts = () => {
   const [statusViews, setStatusViews] = useState([]);
   const [allStatuses, setAllStatuses] = useState([]);
   const publishedItems = statusPublish[0]?.items || [];
+  const { setHasUnseenStatus } = useStatus();
 
   const openFriendStatus = (status) => {
     setstepper(0);
@@ -101,6 +103,32 @@ const Statuts = () => {
     setOpenFriend(true);
     setNewStatusUsers((prev) => prev.filter((id) => id !== status.user.iduser));
   };
+  const closeFriendStatus = () => {
+    setOpenFriend(false);
+    loadStatuses(); // sécurité
+  };
+
+  useEffect(() => {
+    if (!friendStatuses || friendStatuses.length === 0) {
+      setHasUnseenStatus(false);
+      return;
+    }
+
+    const now = new Date();
+
+    const hasUnseen = friendStatuses.some((status) => {
+      // statut expiré → ignoré
+      if (status.expiresAt && new Date(status.expiresAt) <= now) {
+        return false;
+      }
+
+      // au moins un item non vu
+      return status.items.some((item) => !item.viewed);
+    });
+
+    setHasUnseenStatus(hasUnseen);
+  }, [friendStatuses]);
+
   useEffect(() => {
     const socket = getSocket();
     if (!socket || !user?.iduser) return;
@@ -264,11 +292,15 @@ const Statuts = () => {
     const item = activeStatus.items[stepper];
     if (!item) return;
 
-    axios.post(
-      `http://localhost:5000/status-item-view/${item.id}`,
-      {},
-      { withCredentials: true }
-    );
+    axios
+      .post(
+        `http://localhost:5000/status-item-view/${item.id}`,
+        {},
+        { withCredentials: true }
+      )
+      .then(() => {
+        loadStatuses();
+      });
   }, [stepper]);
   const getViews = async (itemId) => {
     const res = await axios.get(
@@ -283,7 +315,7 @@ const Statuts = () => {
   useEffect(() => {
     if (!open12) return;
     const item = publishedItems[stepper];
-    if (!item) return;
+    if (!item?.id) return;
 
     const loadViews = async () => {
       try {
@@ -874,7 +906,8 @@ const Statuts = () => {
 
     return () => clearInterval(interval);
   }, []);
-  const viewedCount = statusPublish.filter((s) => s.viewed).length;
+  const viewedCount =
+    statusPublish[0]?.items.filter((s) => s.viewed).length || 0;
   const getStatusBorder = (total, viewedCount = 0) => {
     if (total === 0) return {};
 
@@ -910,41 +943,6 @@ const Statuts = () => {
       setselectbackground(URL.createObjectURL(file));
     }
   };
-
-  useEffect(() => {
-    if (!open12) return;
-
-    const item = publishedItems[stepper];
-    if (!item) return;
-
-    const markSeen = setTimeout(() => {
-      item.viewed = true;
-    }, 1000);
-
-    return () => clearTimeout(markSeen);
-  }, [stepper, open12, publishedItems]);
-  /*useEffect(() => {
-    if (!open12) return;
-
-    const items = statusPublish[0]?.items;
-    if (!items || !items[stepper]) return;
-
-    const step = items[stepper];
-
-    if (
-      step.type === "media" &&
-      (step.mediatype?.startsWith("video/") ||
-        step.mediatype?.startsWith("audio/"))
-    ) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setstepper((prev) => (prev < items.length - 1 ? prev + 1 : prev));
-    }, step.time * 1000);
-
-    return () => clearTimeout(timer);
-  }, [stepper, open12, statusPublish]);*/
 
   //decouper une video en status
   useEffect(() => {
@@ -1100,6 +1098,7 @@ const Statuts = () => {
       }
     }
   };
+
   return (
     <div className="MessageMain">
       <div className="MessageUser">
@@ -1108,28 +1107,32 @@ const Statuts = () => {
         </p>
         <div className="UserMain">
           <div className="UserMain">
-            {friendStatuses.map((status) => (
-              <div
-                key={status.user.iduser}
-                className="userSelect"
-                onClick={() => openFriendStatus(status)}
-              >
-                {/* Votre avatar d'ami avec statut */}
+            {friendStatuses.map((status) => {
+              const total = status.items?.length || 0;
+              const viewed = status.items?.filter((i) => i.viewed).length || 0;
+              return (
                 <div
-                  className="status-avatar"
-                  style={getStatusBorder(statusPublish.length, viewedCount)}
+                  key={status.user.iduser}
+                  className="userSelect"
+                  onClick={() => openFriendStatus(status)}
                 >
-                  <img
-                    src={getUserPhoto(status.user.userphoto)}
-                    alt={status.user.username}
-                  />
+                  {/* Votre avatar d'ami avec statut */}
+                  <div
+                    className="status-avatar"
+                    style={getStatusBorder(total, viewed)}
+                  >
+                    <img
+                      src={getUserPhoto(status.user.userphoto)}
+                      alt={status.user.username}
+                    />
+                  </div>
+                  <div className="userSelectText">
+                    <p>{status.user.username}</p>
+                    <small>{status.items?.length || 0} statut(s)</small>
+                  </div>
                 </div>
-                <div className="userSelectText">
-                  <p>{status.user.username}</p>
-                  <small>{status.items?.length || 0} statut(s)</small>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         <div className="UserMain" style={{ marginTop: "30px" }}>
@@ -1146,7 +1149,10 @@ const Statuts = () => {
             >
               <div
                 className="status-avatar"
-                style={getStatusBorder(statusPublish.length, viewedCount)}
+                style={getStatusBorder(
+                  statusPublish[0]?.items.length,
+                  viewedCount
+                )}
               >
                 <img src={getUserPhoto(user.userphoto)} alt="" />
               </div>
@@ -1446,9 +1452,9 @@ const Statuts = () => {
             "& .MuiDialog-paper": {
               width: "100%",
               maxWidth: "800px",
-              height: "auto",
-              maxHeight: "800px",
+              height: "100%",
               position: "relative",
+              overflowY: "auto",
             },
           }}
         >
@@ -1544,13 +1550,13 @@ const Statuts = () => {
                   }}
                 >
                   <img
-                    src={v.user?.userphoto || img}
-                    alt=""
+                    src={getUserPhoto(v.viewer?.userphoto)}
+                    alt={v.viewer?.username}
                     width={30}
                     height={30}
                     style={{ borderRadius: "50%" }}
                   />
-                  <span>{v.user?.username}</span>
+                  <span>{v.viewer?.username}</span>
                 </div>
               ))
             )}
@@ -1568,7 +1574,7 @@ const Statuts = () => {
       {openFriend && activeStatus && (
         <Dialog
           open={openFriend}
-          onClose={() => setOpenFriend(false)}
+          onClose={closeFriendStatus}
           sx={{
             "& .MuiDialog-paper": {
               width: "100%",

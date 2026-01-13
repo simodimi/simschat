@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import img from "../assets/ami.png";
 import "../styles/ami.css";
 import Button from "../containers/Button.jsx";
@@ -11,6 +11,8 @@ import { io } from "socket.io-client";
 import { useAuth } from "../pages/AuthContextUser.jsx";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { useFriendRequests } from "./FriendRequestContext.jsx";
+
 import { useMemo } from "react";
 
 const Ami = ({ setadduser, setclickuser }) => {
@@ -28,7 +30,28 @@ const Ami = ({ setadduser, setclickuser }) => {
   const [friends, setfriends] = useState([]);
   const [showoptionuserAway, setshowoptionuserAway] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [friendshipDate, setFriendshipDate] = useState(null);
+  const [lastExchanges, setLastExchanges] = useState({});
+  const [openMedia, setOpenMedia] = useState(false);
+  const [mediaList, setMediaList] = useState([]);
 
+  const { setPendingCount } = useFriendRequests();
+  const handleOpenMedia = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/message/medias/${showprofile.id}`,
+        { withCredentials: true }
+      );
+      setMediaList(res.data);
+      setOpenMedia(true);
+    } catch {
+      toast.error("Erreur chargement médias");
+    }
+  };
+
+  useEffect(() => {
+    setPendingCount(usering.length);
+  }, [usering]);
   const displayUsers = useMemo(() => {
     const friendIds = new Set(users.map((u) => u.id));
     const sentToIds = new Set(sentRequests.map((r) => r.receiverId));
@@ -54,6 +77,7 @@ const Ami = ({ setadduser, setclickuser }) => {
     s.on("friend_request_received", (data) => {
       setusering((prev) => {
         if (prev.some((r) => r.requestId === data.requestId)) return prev;
+        toast.info(`Nouvelle demande d'amitié de ${data.sender.name}`);
         return [
           {
             requestId: data.requestId,
@@ -65,39 +89,6 @@ const Ami = ({ setadduser, setclickuser }) => {
         ];
       });
     });
-
-    /* s.on("friends_updated", async () => {
-      try {
-        const [receivedRes, sentRes] = await Promise.all([
-          axios.get("http://localhost:5000/friends/requests/received", {
-            withCredentials: true,
-          }),
-          axios.get("http://localhost:5000/friends/requests/sent", {
-            withCredentials: true,
-          }),
-        ]);
-
-        setusering(
-          receivedRes.data.map((r) => ({
-            requestId: r.id,
-            id: r.requester.iduser,
-            name: r.requester.username,
-            image: r.requester.userphoto || img,
-          }))
-        );
-
-        setSentRequests(
-          sentRes.data.map((r) => ({
-            requestId: r.id,
-            receiverId: r.addressee.iduser,
-            receiverName: r.addressee.username,
-          }))
-        );
-      } catch (e) {
-        console.error(e);
-      }
-    });*/
-
     s.on("friends_updated", async () => {
       try {
         const [friendsRes, receivedRes, sentRes, usersRes] = await Promise.all([
@@ -354,6 +345,69 @@ const Ami = ({ setadduser, setclickuser }) => {
     setclickuser(id);
     navigate("/message");
   };
+  useEffect(() => {
+    if (!showprofile?.id) return;
+
+    const fetchFriendshipDate = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/friends/since/${showprofile.id}`,
+          { withCredentials: true }
+        );
+
+        setFriendshipDate(res.data.formattedDate);
+      } catch (error) {
+        console.error("Erreur date amitié", error);
+        setFriendshipDate(null);
+      }
+    };
+
+    fetchFriendshipDate();
+  }, [showprofile?.id]);
+  useEffect(() => {
+    if (!friends.length) return;
+
+    const loadLastExchanges = async () => {
+      const results = {};
+
+      for (const friend of friends) {
+        try {
+          const res = await axios.get(
+            `http://localhost:5000/message/last-exchange/${friend.id}`,
+            { withCredentials: true }
+          );
+
+          results[friend.id] = res.data.formattedDate;
+        } catch (err) {
+          results[friend.id] = null;
+        }
+      }
+
+      setLastExchanges(results);
+    };
+
+    loadLastExchanges();
+  }, [friends]);
+  const handledeleteuser = async (friendId) => {
+    try {
+      await axios.delete(`http://localhost:5000/friends/${friendId}`, {
+        withCredentials: true,
+      });
+
+      setusers((prev) => prev.filter((u) => u.id !== friendId));
+      setfriends((prev) => prev.filter((u) => u.id !== friendId));
+      setadduser((prev) => prev.filter((u) => u.id !== friendId));
+      setshowprofile(null);
+      setOpen(false);
+
+      toast.success("Ami supprimé");
+    } catch {
+      toast.error("Erreur suppression ami");
+    }
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   return (
     <div className="MessageMain">
@@ -421,14 +475,57 @@ const Ami = ({ setadduser, setclickuser }) => {
             {showoptionuserAway && showprofile && (
               <div className="optionSentence">
                 <p>
-                  vous êtes ami(e)s avec {showprofile.name} depuis : mercredi 12
-                  janvier 2022
+                  vous êtes ami(e)s avec {showprofile.name} depuis :
+                  {friendshipDate
+                    ? new Date(
+                        `${friendshipDate.year}-${friendshipDate.month}-${friendshipDate.day}`
+                      ).toLocaleDateString("fr-FR", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : "chargement..."}
                 </p>
                 <p>
-                  dernier échange avec {showprofile.name}:mercredi 12 janvier
-                  2022
+                  dernier échange :{" "}
+                  {lastExchanges?.[showprofile.id] ? (
+                    <>
+                      {new Date(
+                        `${lastExchanges[showprofile.id].year}-${
+                          lastExchanges[showprofile.id].month
+                        }-${lastExchanges[showprofile.id].day}`
+                      ).toLocaleDateString("fr-FR", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}{" "}
+                      à{" "}
+                      {String(lastExchanges[showprofile.id].hours).padStart(
+                        2,
+                        "0"
+                      )}
+                      :
+                      {String(lastExchanges[showprofile.id].minutes).padStart(
+                        2,
+                        "0"
+                      )}
+                      :
+                      {String(lastExchanges[showprofile.id].seconds).padStart(
+                        2,
+                        "0"
+                      )}
+                    </>
+                  ) : (
+                    "aucun échange"
+                  )}
                 </p>
-                <p>liste des medias échangés avec {showprofile.name}</p>
+
+                <p onClick={handleOpenMedia} style={{ cursor: "pointer" }}>
+                  liste des médias échangés avec {showprofile.name}
+                </p>
+
                 <p onClick={() => setOpen(true)}>
                   supprimer {showprofile.name} de votre liste d'ami(e)s
                 </p>
@@ -587,6 +684,75 @@ const Ami = ({ setadduser, setclickuser }) => {
           </DialogActions>
         </Dialog>
       )}
+      <Dialog open={openMedia} onClose={() => setOpenMedia(false)}>
+        <DialogContent>
+          {mediaList.length === 0 ? (
+            <p>Aucun média échangé</p>
+          ) : (
+            mediaList.map((m) => (
+              <div key={m.id} style={{ marginBottom: "15px" }}>
+                {/* IMAGE */}
+                {m.fileType.startsWith("image/") && (
+                  <img
+                    src={`http://localhost:5000${m.fileUrl}`}
+                    style={{ width: "100%", borderRadius: "10px" }}
+                  />
+                )}
+
+                {/* VIDEO */}
+                {m.fileType.startsWith("video/") && (
+                  <video
+                    controls
+                    style={{ width: "100%", borderRadius: "10px" }}
+                  >
+                    <source
+                      src={`http://localhost:5000${m.fileUrl}`}
+                      type={m.fileType}
+                    />
+                    Votre navigateur ne supporte pas la vidéo.
+                  </video>
+                )}
+
+                {/* AUDIO */}
+                {m.fileType.startsWith("audio/") && (
+                  <audio controls style={{ width: "100%" }}>
+                    <source
+                      src={`http://localhost:5000${m.fileUrl}`}
+                      type={m.fileType}
+                    />
+                    Votre navigateur ne supporte pas l’audio.
+                  </audio>
+                )}
+
+                {/* PDF */}
+                {m.fileType === "application/pdf" && (
+                  <iframe
+                    src={`http://localhost:5000${m.fileUrl}`}
+                    frameborder="0"
+                    width="100%"
+                    height="300px"
+                  >
+                    {m.fileName}
+                  </iframe>
+                )}
+
+                {/* AUTRES FICHIERS */}
+                {!m.fileType.startsWith("image/") &&
+                  !m.fileType.startsWith("video/") &&
+                  !m.fileType.startsWith("audio/") &&
+                  m.fileType !== "application/pdf" && (
+                    <iframe
+                      src={`http://localhost:5000${m.fileUrl}`}
+                      frameborder="0"
+                    >
+                      {m.fileName}
+                    </iframe>
+                  )}
+              </div>
+            ))
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

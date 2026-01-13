@@ -968,10 +968,10 @@ const Statuts = () => {
 
       let color;
       if (isOwner) {
-        color = "#ccc"; // Toujours blanc pour le créateur
+        color = "green"; // Toujours vert pour le créateur
       } else {
         // Pour les amis : vu = vert, non-vu = gris
-        color = i < viewedCount ? "green" : "#ccc";
+        color = i < viewedCount ? "#ccc" : "green";
       }
 
       gradient.push(
@@ -1200,14 +1200,7 @@ const Statuts = () => {
                 setOpen12(true);
               }}
             >
-              <div
-                className="status-avatar"
-                style={getStatusBorder(
-                  statusPublish[0]?.items.length,
-                  statusPublish[0]?.items.length,
-                  true
-                )}
-              >
+              <div className="status-avatar">
                 <img src={getUserPhoto(user.userphoto)} alt="" />
               </div>
               <div className="userSelectText">

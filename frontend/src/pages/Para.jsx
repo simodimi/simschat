@@ -295,10 +295,11 @@ const Para = ({ setchoicebk }) => {
         }
       );
       // Mettre à jour l'aperçu avec la nouvelle image
-      if (changepicture.photoUser) {
-        const newPhotoUrl = URL.createObjectURL(changepicture.photoUser);
-        setpicture(newPhotoUrl);
-      }
+      setpicture(null);
+      setuser((prev) => ({
+        ...prev,
+        userphoto: res.data.user.userphoto,
+      }));
       setuser((prev) => ({ ...prev, ...res.data.user }));
       toast.success("Profil mis à jour avec succès");
       handlenavigate();
@@ -392,11 +393,6 @@ const Para = ({ setchoicebk }) => {
     if (photo.startsWith("http")) return photo;
     return `http://localhost:5000${photo}`;
   };
-  useEffect(() => {
-    if (user?.userphoto) {
-      setpicture(getUserPhoto(user.userphoto));
-    }
-  }, [user]);
   return (
     <div className="headerpara">
       {!para0 && (
@@ -428,7 +424,7 @@ const Para = ({ setchoicebk }) => {
 
                   <div className="newpicture">
                     <img
-                      src={picture || getUserPhoto(user.userphoto)}
+                      src={picture ?? getUserPhoto(user.userphoto)}
                       alt="photo de profil"
                     />
                   </div>
@@ -580,7 +576,7 @@ const Para = ({ setchoicebk }) => {
 
                   <div className="newpicture">
                     <img
-                      src={picturebk || getUserPhoto(user.background_image)}
+                      src={getUserPhoto(user.background_image) || picturebk}
                       alt="photo de profil"
                     />
                   </div>

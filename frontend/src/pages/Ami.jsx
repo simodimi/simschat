@@ -1,5 +1,6 @@
 import React, { use, useEffect, useState } from "react";
 import img from "../assets/ami.png";
+import img1 from "../assets/send.png";
 import "../styles/ami.css";
 import Button from "../containers/Button.jsx";
 import Dialog from "@mui/material/Dialog";
@@ -456,7 +457,7 @@ const Ami = ({ setadduser, setclickuser }) => {
                   <div className="SiderbarTops">
                     <div className="SiderbarTopOption">
                       <img
-                        src={img}
+                        src={img1}
                         alt=""
                         onClick={() => handlesendsms(showprofile.id)}
                       />

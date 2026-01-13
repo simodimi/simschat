@@ -1,4 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import img1 from "../assets/background.png";
+import img2 from "../assets/couleur.png";
+import img3 from "../assets/images.png";
+import img4 from "../assets/media.png";
+import img5 from "../assets/texte.png";
 import img from "../assets/ami.png";
 import Button from "../containers/Button";
 import "../styles/status.css";
@@ -1326,7 +1331,7 @@ const Statuts = () => {
               {viewbackground && (
                 <div className="SiderbarTops">
                   <div className="SiderbarTopOption">
-                    <img src={img} alt="" onClick={handlebackground} />
+                    <img src={img1} alt="" onClick={handlebackground} />
                   </div>
                   <p id="texthovers">Ajouter fond d'ecran</p>
                 </div>
@@ -1334,7 +1339,7 @@ const Statuts = () => {
               {viewcolor && (
                 <div className="SiderbarTops">
                   <div className="SiderbarTopOption">
-                    <img src={img} alt="" onClick={handlecolor} />
+                    <img src={img2} alt="" onClick={handlecolor} />
                   </div>
                   <p id="texthovers">Ajouter couleur texte</p>
                 </div>
@@ -1344,7 +1349,7 @@ const Statuts = () => {
               {viewtext && (
                 <div className="SiderbarTops">
                   <div className="SiderbarTopOption">
-                    <img src={img} alt="" onClick={handlesms} />
+                    <img src={img5} alt="" onClick={handlesms} />
                   </div>
                   <p id="texthovers">Ajouter texte</p>
                 </div>
@@ -1352,7 +1357,7 @@ const Statuts = () => {
               {viewphoto && (
                 <div className="SiderbarTops">
                   <div className="SiderbarTopOption">
-                    <img src={img} alt="" onClick={handlechangephoto} />
+                    <img src={img3} alt="" onClick={handlechangephoto} />
                   </div>
                   <input
                     type="file"
@@ -1367,7 +1372,7 @@ const Statuts = () => {
               {viewmedia && (
                 <div className="SiderbarTops">
                   <div className="SiderbarTopOption">
-                    <img src={img} alt="" onClick={handlechangemedia} />
+                    <img src={img4} alt="" onClick={handlechangemedia} />
                   </div>
                   <input
                     type="file"

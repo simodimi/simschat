@@ -43,9 +43,9 @@
   align-items: center;
   gap: 15px;
 }
-.StatusWritting .StatusMain img:hover {
+/*.StatusWritting .StatusMain img:hover {
   background-color: rgb(141, 146, 216);
-}
+}*/
 .StatusWritting .SiderbarTopOption span {
   width: 60px;
   height: 30px;

@@ -8,6 +8,8 @@ import img from "../assets/logochat.png";
 import pict from "../assets/pict.webp";
 import "../styles/connexion.css";
 import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 import Button from "../containers/Button";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -47,31 +49,66 @@ const Forgetpassword = () => {
     return completedSteps() === totalSteps();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep === 0) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!userData.useremail) {
         seterror("Veuillez remplir tous les champs");
+        toast.error("Veuillez remplir tous les champs");
+        setActiveStep(0);
         return;
       }
       if (!emailRegex.test(userData.useremail)) {
         seterror("Veuillez entrer une adresse email valide");
+        toast.error("Veuillez entrer une adresse email valide");
+        setActiveStep(0);
         return;
       }
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
-      seterror("");
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/user/forgot-password",
+          {
+            useremail: userData.useremail,
+          }
+        );
+        if (response.status === 200) {
+          setActiveStep((prevActiveStep) => prevActiveStep + 1);
+          seterror("");
+        }
+      } catch (error) {
+        console.error("erreur lors de l'envoie de l'email:", error);
+        seterror("Erreur lors de l'envoie de l'email. Veuillez réessayer.");
+        setActiveStep(0);
+      }
     }
     if (activeStep === 1) {
       if (!userData.usercode) {
         seterror("Veuillez remplir tous les champs");
+        toast.error("Veuillez remplir tous les champs");
         return;
       }
       if (userData.usercode.trim().length !== 6) {
         seterror("Veuillez entrer un code de 6 chiffres");
+        toast.error("Veuillez entrer un code de 6 chiffres");
         return;
       }
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
-      seterror("");
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/user/verify-code",
+          {
+            useremail: userData.useremail,
+            code: userData.usercode,
+          }
+        );
+        if (response.status === 200) {
+          setActiveStep((prevActiveStep) => prevActiveStep + 1);
+          seterror("");
+        }
+      } catch (error) {
+        console.error("erreur lors de la vérification du code:", error);
+        seterror("Code invalide. Veuillez réessayer.");
+        setActiveStep(1);
+      }
     }
   };
 
@@ -114,10 +151,12 @@ const Forgetpassword = () => {
       return false;
     }
   };
-  const handleconfirm = () => {
+  const handleconfirm = async () => {
     if (activeStep === 2) {
       if (!userData.userpassword) {
         seterror("Veuillez remplir tous les champs");
+        toast.error("Veuillez remplir tous les champs");
+        setActiveStep(2);
         return;
       }
       const pass = userData.userpassword;
@@ -132,11 +171,26 @@ const Forgetpassword = () => {
         seterror("le mot de passe ne respecte pas toutes les conditions");
         return;
       }
-      console.log(userData);
-      navige("/");
-      setActiveStep(0);
-      setuserData({});
-      seterror("");
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/user/reset-password",
+          {
+            useremail: userData.useremail,
+            userpassword: userData.userpassword,
+          }
+        );
+        if (response.status === 200) {
+          toast.success("Mot de passe réinitialisé avec succès");
+          navige("/");
+          setActiveStep(0);
+          setuserData({});
+        }
+      } catch (error) {
+        console.error(
+          "erreur lors de la réinitialisation du mot de passe:",
+          error
+        );
+      }
     }
   };
   return (

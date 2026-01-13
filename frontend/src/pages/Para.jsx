@@ -1,14 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/parametre.css";
-import { useNavigate } from "react-router-dom";
 import Button from "../containers/Button.jsx";
 import plus from "../assets/background/plus.png";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
-import on from "../assets/onlight.jpg";
-import off from "../assets/offlight.jpg";
 import Box from "@mui/material/Box";
 import axios from "axios";
 import img from "../assets/ami.png";
@@ -230,23 +227,6 @@ const Para = ({ setchoicebk }) => {
       return;
     }
     toast.success("Mot de passe modifié avec succès");
-    /*  try {
-      await axios.put(
-        `http://localhost:5000/user/${user.iduser}/password`,
-        {
-          currentPassword: changepicture.passwordUser,
-          newPassword: changepicture.newpasswordUser,
-        },
-        { withCredentials: true }
-      );
-
-      toast.success("Mot de passe modifié avec succès");
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Erreur lors du changement de mot de passe"
-      );
-    }*/
   };
   const handlesubmit1 = async (e) => {
     e.preventDefault();
@@ -313,12 +293,6 @@ const Para = ({ setchoicebk }) => {
     }
   };
 
-  /*const handlesubmitbk = (e) => {
-    e.preventDefault();
-    setchangepicturebk({ ...changepicturebk, photoUserbk: picturebk });
-    setchoicebk(picturebk);
-    handlenavigate();
-  };*/
   const handlesubmitbk = async (e) => {
     e.preventDefault();
 
@@ -523,7 +497,7 @@ const Para = ({ setchoicebk }) => {
         {paraopt3 && (
           <div className="paraChangePicture">
             <div className="headerChangePicture">
-              <p> Dimitri,vous voulez supprimer votre compte?</p>
+              <p> {user.username},vous voulez supprimer votre compte?</p>
               <div className="pictureparabtn">
                 <Button className="retourbtn" onClick={handlenavigate}>
                   non
@@ -616,43 +590,6 @@ const Para = ({ setchoicebk }) => {
             </div>
           </form>
         )}
-        {/*paraopt6 && (
-          <form onSubmit={handlesubmitbk}>
-            <div className="paraChangePicture">
-              <div className="headerChangePicture">
-                <p>Changer votre mode d'affichage</p>
-                <div className="changePicturepara">
-                  {night ? (
-                    <img
-                      src={off}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={on}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="pictureparabtn">
-                  <Button className="retourbtn" onClick={handlenight}>
-                    {night ? "passer en mode jour" : "passer en mode nuit"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </form>
-        )*/}
       </div>
       {open && (
         <Dialog open={open} onClose={handleClose} className="customdialog">

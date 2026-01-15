@@ -45,8 +45,6 @@ const isOwner = (resourceUserId) => {
     next();
   };
 };
-
-// Middleware pour vérifier l'accès aux messages privés
 // Middleware pour vérifier l'accès aux messages privés
 const canAccessMessage = async (req, res, next) => {
   try {

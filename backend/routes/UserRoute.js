@@ -23,6 +23,8 @@ router.post("/forgot-password", userController.forgotPassword);
 router.post("/verify-code", userController.verifyCode);
 router.post("/reset-password", userController.resetPassword);
 
+//charger l'user
+router.get("/me", verifyToken, userController.getCurrentUser);
 // CRUD user
 router.get("/", verifyToken, userController.getAllUsers);
 router.get("/:iduser", verifyToken, userController.getUser);
@@ -32,6 +34,7 @@ router.put(
   uploadProfilePhoto,
   userController.updateUser
 );
+
 router.delete("/:iduser", verifyToken, userController.deleteUser);
 
 router.put("/:iduser/password", verifyToken, userController.updatePassword);
@@ -42,4 +45,5 @@ router.put(
   uploadBackground,
   userController.updateBackground
 );
+
 module.exports = router;

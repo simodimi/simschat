@@ -3,9 +3,7 @@ const { Message } = require("../models/Message");
 const User = require("../models/User");
 const { Op } = require("sequelize");
 
-/* ============================
-   ENVOYER UNE DEMANDE D'AMI
-============================ */
+//envoyer une demande d'ami
 const sendFriendRequest = async (req, res) => {
   try {
     const requesterId = req.user.iduser;
@@ -54,14 +52,14 @@ const sendFriendRequest = async (req, res) => {
       }
     }
 
-    // 1️⃣ Création
+    // 1️Création
     const request = await Friends.create({
       requesterId,
       addresseeId,
       status: "attente",
     });
 
-    // 2️⃣ Récupération avec user
+    // 2️Récupération avec user
     const requestWithUser = await Friends.findByPk(request.id, {
       include: [
         {
@@ -72,7 +70,7 @@ const sendFriendRequest = async (req, res) => {
       ],
     });
 
-    // 3️⃣ Socket ciblé (UI instantanée)
+    // 3️Socket ciblé (UI instantanée)
     if (global.io) {
       global.io.to(`user_${addresseeId}`).emit("friend_request_received", {
         requestId: request.id,
@@ -101,10 +99,7 @@ const sendFriendRequest = async (req, res) => {
     });
   }
 };
-
-/* ============================
-   DEMANDES ENVOYÉES
-============================ */
+//demandes envoyées
 const getSentRequests = async (req, res) => {
   try {
     const userId = req.user.iduser;
@@ -127,10 +122,7 @@ const getSentRequests = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
-
-/* ============================
-   DEMANDES REÇUES
-============================ */
+//demandes reçues
 const getReceivedRequests = async (req, res) => {
   try {
     const userId = req.user.iduser;
@@ -154,9 +146,7 @@ const getReceivedRequests = async (req, res) => {
   }
 };
 
-/* ============================
-   RÉPONDRE À UNE DEMANDE
-============================ */
+//repondre à une demande
 const respondToRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -194,8 +184,6 @@ const respondToRequest = async (req, res) => {
     }
 
     await request.save();
-
-    // 🔔 SOCKET : Correction Problème 4
     if (global.io) {
       const userData =
         status === "accepter"
@@ -230,10 +218,7 @@ const respondToRequest = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
-
-/* ============================
-   ANNULER UNE DEMANDE
-============================ */
+//annuler une demande
 const cancelRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -255,7 +240,6 @@ const cancelRequest = async (req, res) => {
 
     await request.destroy({ userId });
 
-    // 🔔 SOCKET : Correction Problème 1
     if (global.io) {
       global.io
         .to(`user_${request.addresseeId}`)
@@ -270,17 +254,14 @@ const cancelRequest = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
-
-/* ============================
-   LISTE DES AMIS
-============================ */
+//liste des amis
 const getFriends = async (req, res) => {
   try {
     const userId = req.user.iduser;
 
     const friendships = await Friends.findAll({
       where: {
-        status: "accepter", // Assurez-vous que c'est "accepter" et non "accepter"
+        status: "accepter",
         [Op.or]: [{ requesterId: userId }, { addresseeId: userId }],
       },
       include: [

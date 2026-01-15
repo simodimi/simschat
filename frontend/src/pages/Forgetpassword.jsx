@@ -3,9 +3,7 @@ import Box from "@mui/material/Box";
 import Stepper from "@mui/material/Stepper";
 import Step from "@mui/material/Step";
 import StepButton from "@mui/material/StepButton";
-import Typography from "@mui/material/Typography";
 import img from "../assets/logochat.png";
-import pict from "../assets/pict.webp";
 import "../styles/connexion.css";
 import { useState } from "react";
 import axios from "axios";
@@ -15,8 +13,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 const Forgetpassword = () => {
   const steps = ["email", "valider code", "changer mot de passe"];
-  const [activeStep, setActiveStep] = React.useState(0);
-  const [completed, setCompleted] = React.useState({});
+  const [activeStep, setActiveStep] = useState(0);
+  const [completed, setCompleted] = useState({});
   const [error, seterror] = useState("");
   const [errorcdt, seterrorcdt] = useState(null);
   const navige = useNavigate();

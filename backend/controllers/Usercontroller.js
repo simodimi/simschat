@@ -214,34 +214,7 @@ const getUser = async (req, res) => {
     return res.status(500).json({ message: "une erreur est survenue" });
   }
 };
-//mis à jour d'un user
-/*const updateUser = async (req, res) => {
-  try {
-    if (req.user.iduser !== parseInt(req.params.iduser)) {
-      return res.status(403).json({ message: "Accès refusé" });
-    }
-    const { username, userpassword, useremail, userphoto } = req.body;
-    const updateData = { username, userpassword, useremail, userphoto };
-    //si nouveau mot de passe
-    if (userpassword) {
-      const hash = await bcrypt.hash(userpassword, 12);
-      updateData.userpassword = hash;
-    }
-    const [updated] = await User.update(updateData, {
-      where: { iduser: req.params.iduser },
-    });
-    if (updated > 0) {
-      return res
-        .status(200)
-        .json({ message: "utilisateur mis à jour avec succès" });
-    } else {
-      return res.status(404).json({ message: "utilisateur n'existe pas" });
-    }
-  } catch (error) {
-    console.error("erreur lors de la mise à jour de l'utilisateur", error);
-    return res.status(500).json({ message: "une erreur est survenue" });
-  }
-};*/
+
 const updateUser = async (req, res) => {
   try {
     if (req.user.iduser !== parseInt(req.params.iduser)) {
@@ -261,7 +234,7 @@ const updateUser = async (req, res) => {
     if (req.file) {
       updateData.userphoto = `${req.protocol}://${req.get("host")}/uploads/${
         req.file.filename
-      }`; //`/uploads/${req.file.filename}`;
+      }`;
     }
 
     const [updated] = await User.update(updateData, {
@@ -272,7 +245,7 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
-    // ✅ récupérer l'utilisateur à jour
+    // récupérer l'utilisateur à jour
     const user = await User.findByPk(req.params.iduser, {
       attributes: [
         "iduser",
@@ -520,6 +493,25 @@ const updateBackground = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
+// Récupérer l'utilisateur connecté (via token)
+const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.iduser, {
+      attributes: {
+        exclude: ["userpassword", "validationToken"],
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Erreur getCurrentUser:", error);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+};
 
 module.exports = {
   loginUser,
@@ -537,4 +529,5 @@ module.exports = {
   validateUserByToken,
   updatePassword,
   updateBackground,
+  getCurrentUser,
 };

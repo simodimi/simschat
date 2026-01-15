@@ -3,8 +3,6 @@ import Button from "../containers/Button";
 import "../styles/connexion.css";
 import img from "../assets/logochat.png";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import axios from "axios";
 import { useAuth } from "../pages/AuthContextUser";
 
 const Connexion = () => {

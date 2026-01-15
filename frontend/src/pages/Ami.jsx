@@ -21,29 +21,54 @@ const Ami = ({ setadduser, setclickuser }) => {
   const [textsearching, settextsearching] = useState("");
   const [users, setusers] = useState([]); // amis
   const [usering, setusering] = useState([]); // demandes reçues
-  const [newusers, setnewusers] = useState([]); // utilisateurs
-  const [selectUser, setselectUser] = useState(null);
-  const [showprofile, setshowprofile] = useState(null);
-  const [sentRequests, setSentRequests] = useState([]); // ← objets complets
+  const [newusers, setnewusers] = useState([]); // utilisateurs sauf moi
+  const [selectUser, setselectUser] = useState(null); // user sélectionné
+  const [showprofile, setshowprofile] = useState(null); // profil affiché de l'ami(e)
+  const [sentRequests, setSentRequests] = useState([]); // demandes envoyées
   const [open, setOpen] = useState(false);
   const [socket, setSocket] = useState(null);
-  const [allUsers, setAllUsers] = useState([]);
-  const [friends, setfriends] = useState([]);
+  const [allUsers, setAllUsers] = useState([]); // tous les users
+  const [friends, setfriends] = useState([]); //copie des amis pour le filtre
   const [showoptionuserAway, setshowoptionuserAway] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(true); // état de chargement des utilisateurs
   const [friendshipDate, setFriendshipDate] = useState(null);
   const [lastExchanges, setLastExchanges] = useState({});
   const [openMedia, setOpenMedia] = useState(false);
   const [mediaList, setMediaList] = useState([]);
-
   const { setPendingCount } = useFriendRequests();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  //mettre à jour le compteur ami dans la siderbar
+  useEffect(() => {
+    setPendingCount(usering.length);
+  }, [usering]);
+
+  // Préparer la liste des utilisateurs à afficher avec leur statut d'amitié(vous êtes amis, demande envoyée, demande reçue)
+  const displayUsers = useMemo(() => {
+    const friendIds = new Set(users.map((u) => u.id)); //on recupère les ids des amis
+    const sentToIds = new Set(sentRequests.map((r) => r.receiverId)); //ids des demandes envoyées
+    const receivedFromIds = new Set(usering.map((r) => r.id)); //ids des demandes reçues
+
+    return allUsers.map((u) => ({
+      ...u,
+      //on vérifie si c'est un ami
+      isFriend: friendIds.has(u.id),
+      //on vérifie si on a envoyé une demande d'ami à cet utilisateur
+      hasSentRequest: sentToIds.has(u.id),
+      //on vérifie si on a reçu une demande d'ami de cet utilisateur
+      hasReceivedRequest: receivedFromIds.has(u.id),
+    }));
+  }, [allUsers, users, sentRequests, usering]);
+
   const handleOpenMedia = async () => {
+    //charger les médias échangés avec cet ami(e)
     try {
       const res = await axios.get(
         `http://localhost:5000/message/medias/${showprofile.id}`,
         { withCredentials: true }
       );
-      setMediaList(res.data);
+      setMediaList(res.data); //je stocke la liste des médias
       setOpenMedia(true);
     } catch {
       toast.error("Erreur chargement médias");
@@ -51,32 +76,14 @@ const Ami = ({ setadduser, setclickuser }) => {
   };
 
   useEffect(() => {
-    setPendingCount(usering.length);
-  }, [usering]);
-  const displayUsers = useMemo(() => {
-    const friendIds = new Set(users.map((u) => u.id));
-    const sentToIds = new Set(sentRequests.map((r) => r.receiverId));
-    const receivedFromIds = new Set(usering.map((r) => r.id));
-
-    return allUsers.map((u) => ({
-      ...u,
-      isFriend: friendIds.has(u.id),
-      hasSentRequest: sentToIds.has(u.id),
-      hasReceivedRequest: receivedFromIds.has(u.id),
-    }));
-  }, [allUsers, users, sentRequests, usering]);
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  /* ================= SOCKET ================= */
-  useEffect(() => {
-    if (!user?.iduser) return;
+    if (!user?.iduser) return; //si l'user n'est pas connecté
 
     const s = io("http://localhost:5000", { withCredentials: true });
-    s.emit("join_user_room", user.iduser);
-
+    s.emit("join_user_room", user.iduser); //rejoindre la room de l'user
+    //reception d'une nouvelle demande d'ami
     s.on("friend_request_received", (data) => {
       setusering((prev) => {
+        //si la demande est deja dans la liste ,on ne duplique pas
         if (prev.some((r) => r.requestId === data.requestId)) return prev;
         toast.info(`Nouvelle demande d'amitié de ${data.sender.name}`);
         return [
@@ -103,7 +110,7 @@ const Ami = ({ setadduser, setclickuser }) => {
           axios.get("http://localhost:5000/user", { withCredentials: true }),
         ]);
 
-        // 🟢 AMIS
+        // amis
         const friends = friendsRes.data.map((f) => ({
           id: f.friend.iduser,
           name: f.friend.username,
@@ -112,8 +119,7 @@ const Ami = ({ setadduser, setclickuser }) => {
         setusers(friends);
         setfriends(friends);
         setadduser(friends);
-
-        // 🟢 DEMANDES REÇUES
+        // demande reçue
         setusering(
           receivedRes.data.map((r) => ({
             requestId: r.id,
@@ -122,8 +128,7 @@ const Ami = ({ setadduser, setclickuser }) => {
             image: r.requester.userphoto || img,
           }))
         );
-
-        // 🟢 DEMANDES ENVOYÉES
+        // demande envoyée
         setSentRequests(
           sentRes.data.map((r) => ({
             requestId: r.id,
@@ -132,9 +137,9 @@ const Ami = ({ setadduser, setclickuser }) => {
           }))
         );
 
-        // 🟢 TOUS LES UTILISATEURS (CLÉ DU BUG)
+        // tous les users
         const allUsers = usersRes.data
-          .filter((u) => u.iduser !== user.iduser)
+          .filter((u) => u.iduser !== user.iduser) //on exclut moi-même
           .map((u) => ({
             id: u.iduser,
             name: u.username,
@@ -147,16 +152,17 @@ const Ami = ({ setadduser, setclickuser }) => {
         console.error("friends_updated sync error", e);
       }
     });
-
+    // annulation
     s.on("friend_request_cancelled", ({ requestId }) => {
       setusering((prev) => prev.filter((r) => r.requestId !== requestId));
     });
-
+    //réponse à une demande d'ami (acceptée ou refusée)
     s.on("friend_request_responded", ({ requestId, status, user }) => {
+      //supprimer la demande envoyée de la liste
       setSentRequests((prev) =>
         prev.filter((req) => req.requestId !== requestId)
       );
-
+      //si accepté, ajouter dans la liste des amis
       if (status === "accepter" && user) {
         const newFriend = {
           id: user.id,
@@ -173,7 +179,7 @@ const Ami = ({ setadduser, setclickuser }) => {
         );
       }
     });
-
+    //suppression
     s.on("friendship_removed", ({ friendId }) => {
       setusers((prev) => prev.filter((u) => u.id !== friendId));
       setadduser((prev) => prev.filter((u) => u.id !== friendId));
@@ -185,7 +191,7 @@ const Ami = ({ setadduser, setclickuser }) => {
     };
   }, [user?.iduser]);
 
-  /* ================= LOAD FRIENDS ================= */
+  //chargement des données initiales
   useEffect(() => {
     if (!user) return;
 
@@ -204,7 +210,7 @@ const Ami = ({ setadduser, setclickuser }) => {
           axios.get("http://localhost:5000/user", { withCredentials: true }),
         ]);
 
-        // ✅ TOUS LES USERS
+        //tous les users
         const allUsers = usersRes.data
           .filter((u) => u.iduser !== user.iduser)
           .map((u) => ({
@@ -216,7 +222,7 @@ const Ami = ({ setadduser, setclickuser }) => {
         setAllUsers(allUsers);
         setnewusers(allUsers);
 
-        // ✅ AMIS
+        // amis
         const friends = friendsRes.data.map((f) => ({
           id: f.friend.iduser,
           name: f.friend.username,
@@ -226,7 +232,7 @@ const Ami = ({ setadduser, setclickuser }) => {
         setfriends(friends);
         setadduser(friends);
 
-        // ✅ DEMANDES
+        //demandes
         setusering(
           receivedRes.data.map((r) => ({
             requestId: r.id,
@@ -243,16 +249,16 @@ const Ami = ({ setadduser, setclickuser }) => {
           }))
         );
       } catch (err) {
-        console.error("LOAD DATA ERROR", err);
+        console.error("erreur de chargement de données", err);
       } finally {
-        setLoadingUsers(false); // 🔥 GARANTI
+        setLoadingUsers(false);
       }
     };
 
     loadData();
   }, [user]);
 
-  /* ================= ACTIONS ================= */
+  // envoyer une demande d'ami
   const sendFriendRequest = (id) => {
     axios
       .post(
@@ -265,7 +271,7 @@ const Ami = ({ setadduser, setclickuser }) => {
         setSentRequests((prev) => [
           ...prev,
           {
-            requestId: res.data.id, // ← ID de la demande
+            requestId: res.data.id,
             receiverId: id,
             ...res.data,
           },
@@ -281,15 +287,12 @@ const Ami = ({ setadduser, setclickuser }) => {
   const handlecancel = (receiverId) => {
     // Trouver la demande correspondante
     const request = sentRequests.find((req) => req.receiverId === receiverId);
-
     if (!request) {
       toast.error("Demande non trouvée");
       return;
     }
-
     axios
       .delete(`http://localhost:5000/friends/request/${request.requestId}`, {
-        // ← requestId ici
         withCredentials: true,
       })
       .then(() => {
@@ -322,7 +325,6 @@ const Ami = ({ setadduser, setclickuser }) => {
       .catch(console.error);
   };
 
-  /* ================= SEARCH ================= */
   const handleChangeFilter = (e) => {
     const v = e.target.value;
     settextsearch(v);
@@ -598,7 +600,7 @@ const Ami = ({ setadduser, setclickuser }) => {
                   </div>
 
                   <div className="">
-                    {/* ===== CAS : DÉJÀ AMIS ===== */}
+                    {/*CAS : DÉJÀ AMIS*/}
                     {p.isFriend && (
                       <>
                         <div className="AmityReceiveButton">
@@ -609,7 +611,7 @@ const Ami = ({ setadduser, setclickuser }) => {
                       </>
                     )}
 
-                    {/* ===== CAS : DEMANDE ENVOYÉE ===== */}
+                    {/*CAS : DEMANDE ENVOYÉE*/}
                     {p.hasSentRequest && !p.isFriend && (
                       <>
                         <p
@@ -631,14 +633,14 @@ const Ami = ({ setadduser, setclickuser }) => {
                       </>
                     )}
 
-                    {/* ===== CAS : DEMANDE REÇUE ===== */}
+                    {/*CAS : DEMANDE REÇUE*/}
                     {p.hasReceivedRequest && !p.isFriend && (
                       <p className="receiveStatus">
                         vous avez reçu une demande
                       </p>
                     )}
 
-                    {/* ===== CAS : ÉTAT INITIAL ===== */}
+                    {/* CAS : ÉTAT INITIAL*/}
                     {!p.isFriend &&
                       !p.hasSentRequest &&
                       !p.hasReceivedRequest && (

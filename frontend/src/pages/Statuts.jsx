@@ -201,46 +201,11 @@ const Statuts = () => {
     setAllStatuses(res.data); // NOUVEL ÉTAT
   };
 
-  /* useEffect(() => {
-    if (!user?.iduser || allStatuses.length === 0) return;
-
-    // 🔹 1️⃣ Grouper TOUS les statuts par utilisateur
-    const groupedStatuses = Object.values(
-      allStatuses.reduce((acc, status) => {
-        const userId = status.user.iduser;
-
-        if (!acc[userId]) {
-          acc[userId] = {
-            user: status.user,
-            items: [],
-          };
-        }
-
-        acc[userId].items.push(...status.items);
-        return acc;
-      }, {})
-    );
-
-    // 🔹 2️⃣ MON statut (1 seul bloc)
-    const myStatus = groupedStatuses.filter(
-      (s) => s.user.iduser === user.iduser
-    );
-
-    // 🔹 3️⃣ STATUTS DE MES AMIS
-    const friendsStatus = groupedStatuses.filter(
-      (s) => s.user.iduser !== user.iduser
-    );
-
-    // 🔹 4️⃣ Mise à jour des states
-    setStatusPublish(myStatus); // ce que ton JSX "Mes statuts" attend
-    setFriendStatuses(friendsStatus);
-  }, [user, allStatuses]);*/
-
   // Dans l'effet qui met à jour les statuts
   useEffect(() => {
     if (!user?.iduser || allStatuses.length === 0) return;
 
-    // 🔹 1️⃣ Grouper TOUS les statuts par utilisateur
+    // Grouper TOUS les statuts par utilisateur
     const groupedStatuses = Object.values(
       allStatuses.reduce((acc, status) => {
         const userId = status.user.iduser;
@@ -257,17 +222,17 @@ const Statuts = () => {
       }, {})
     );
 
-    // 🔹 2️⃣ MON statut (1 seul bloc)
+    //  MON statut (1 seul bloc)
     const myStatus = groupedStatuses.filter(
       (s) => s.user.iduser === user.iduser
     );
 
-    // 🔹 3️⃣ STATUTS DE MES AMIS
+    // STATUTS DE MES AMIS
     const friendsStatus = groupedStatuses.filter(
       (s) => s.user.iduser !== user.iduser
     );
 
-    // 🔹 4️⃣ Mise à jour des states
+    // Mise à jour des states
     setStatusPublish(myStatus); // ce que ton JSX "Mes statuts" attend
     setFriendStatuses(friendsStatus);
   }, [user, allStatuses]);
@@ -347,7 +312,7 @@ const Statuts = () => {
         console.log("✅ Item marqué comme vu sur le serveur");
       })
       .catch((err) => {
-        console.error("❌ Erreur marquage vu:", err);
+        console.error("Erreur marquage vu:", err);
       });
   }, [stepper, activeStatus, openFriend]); // Ajouter openFriend
   const getViews = async (itemId) => {
@@ -617,11 +582,6 @@ const Statuts = () => {
 
     loadFriendsAndConversations();
   }, [user?.iduser]);
-  /* useEffect(() => {
-    if (progressRef.current) {
-      progressRef.current.style.width = "0%";
-    }
-  }, [stepper]);*/
   useEffect(() => {
     if (viewtextarea || selectbackground) {
       focus.current?.focus();

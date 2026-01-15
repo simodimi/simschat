@@ -86,59 +86,6 @@ const sendMessage = async (req, res) => {
     res.status(500).json({ message: "Erreur lors de l'envoi du message" });
   }
 };
-
-/*const getConversation = async (req, res) => {
-  try {
-    const userId = req.user.iduser;
-    const otherUserId = parseInt(req.params.id, 10);
-
-    if (!otherUserId) {
-      return res.status(400).json({
-        message: "ID utilisateur invalide",
-      });
-    }
-
-    const messages = await Message.findAll({
-      where: {
-        [Op.or]: [
-          { senderId: userId, receiverId: otherUserId },
-          { senderId: otherUserId, receiverId: userId },
-        ],
-        isDeleted: false,
-      },
-      include: [
-        {
-          model: User,
-          as: "sender",
-          attributes: ["iduser", "username", "userphoto"],
-        },
-        {
-          model: User,
-          as: "receiver",
-          attributes: ["iduser", "username", "userphoto"],
-        },
-        {
-          model: Message,
-          as: "replyTo",
-          required: false,
-          include: [
-            {
-              model: User,
-              as: "sender",
-              attributes: ["iduser", "username", "userphoto"],
-            },
-          ],
-        },
-      ],
-      order: [["createdAt", "ASC"]],
-    });
-
-    res.json(messages);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erreur récupération conversation" });
-  }
-};*/
 const getConversation = async (req, res) => {
   try {
     const userId = req.user.iduser;
@@ -176,47 +123,6 @@ const getConversation = async (req, res) => {
 };
 
 // Nouvelle fonction pour marquer un message comme supprimé
-/*const deleteMessage = async (req, res) => {
-  try {
-    const userId = req.user.iduser;
-    const { messageId } = req.params;
-
-    const message = await Message.findByPk(messageId);
-
-    if (!message) {
-      return res.status(404).json({ message: "Message non trouvé" });
-    }
-
-    // Vérifier si l'utilisateur a le droit de supprimer le message
-    if (message.senderId !== userId && message.receiverId !== userId) {
-      return res.status(403).json({ message: "Non autorisé" });
-    }
-
-    // Marquer le message comme supprimé
-    await message.update({
-      isDeleted: true,
-      deletedById: userId,
-      content: "message supprimé",
-      fileUrl: null,
-      fileName: null,
-      fileSize: null,
-      fileType: null,
-    });
-
-    // Émettre la mise à jour via Socket.io
-    global.io.to(`user_${message.senderId}`).emit("message_deleted", messageId);
-    global.io
-      .to(`user_${message.receiverId}`)
-      .emit("message_deleted", messageId);
-
-    res.json({ message: "Message supprimé avec succès" });
-  } catch (error) {
-    console.error("Erreur lors de la suppression du message:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la suppression du message" });
-  }
-};*/
 const deleteMessage = async (req, res) => {
   try {
     const userId = req.user.iduser;

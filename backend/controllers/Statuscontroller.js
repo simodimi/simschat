@@ -91,7 +91,7 @@ const createStatus = async (req, res) => {
       statusId: status.id,
     });
   } catch (error) {
-    console.error("❌ createStatus error:", error);
+    console.error("createStatus error:", error);
     return res.status(500).json({
       message: "Erreur lors de la création du status",
     });
@@ -103,7 +103,7 @@ const getActiveStatuses = async (req, res) => {
     const now = new Date();
     const userId = req.user.iduser;
 
-    // 1️⃣ Récupérer les amis ACCEPTÉS (ENUM = "accepter")
+    // 1️Récupérer les amis ACCEPTÉS (ENUM = "accepter")
     const friends = await Friends.findAll({
       where: {
         status: "accepter", // ✅ CORRECTION ICI
@@ -111,18 +111,18 @@ const getActiveStatuses = async (req, res) => {
       },
     });
 
-    // 2️⃣ Construire la liste des users autorisés
+    // 2️Construire la liste des users autorisés
     const allowedUserIds = friends.map((f) =>
       f.requesterId === userId ? f.addresseeId : f.requesterId
     );
 
-    // 3️⃣ Ajouter soi-même
+    // 3️Ajouter soi-même
     allowedUserIds.push(userId);
 
     // (optionnel mais recommandé) supprimer les doublons
     const uniqueAllowedUserIds = [...new Set(allowedUserIds)];
 
-    // 4️⃣ Récupérer les statuts visibles
+    // 4️Récupérer les statuts visibles
     const statuses = await Status.findAll({
       where: {
         isPublished: true,
@@ -140,7 +140,7 @@ const getActiveStatuses = async (req, res) => {
         {
           model: StatusItem,
           as: "items",
-          separate: true, // ✅ important pour l'ordre
+          separate: true, // important pour l'ordre
           order: [["order", "ASC"]],
         },
       ],
@@ -167,7 +167,7 @@ const getActiveStatuses = async (req, res) => {
         id: i.id,
         type: i.type,
 
-        // 🔥 CHAMPS ATTENDUS PAR LE FRONTEND
+        // CHAMPS ATTENDUS PAR LE FRONTEND
         value: i.text,
         color: i.color,
         backgroundUrl: i.backgroundUrl,

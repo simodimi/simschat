@@ -20,7 +20,6 @@ const addStatusItem = async (req, res) => {
 
     const item = await StatusItem.create({
       statusId,
-
       order: req.body.order ?? 0,
       type: req.body.type,
 

@@ -19,23 +19,23 @@ export const FriendRequestProvider = ({ children }) => {
       const socket = getSocket();
       if (!socket) return;
 
-      // ✅ 1. Se marquer soi-même online
+      // Se marquer soi-même online
       setOnlineUsers((prev) => ({
         ...prev,
         [user.iduser]: true,
       }));
 
-      // ✅ 2. Écoute des connexions
+      // Écoute des connexions
       socket.on("user_online", (userId) => {
         setOnlineUsers((prev) => ({ ...prev, [userId]: true }));
       });
 
-      // ✅ 3. Écoute des déconnexions
+      // Écoute des déconnexions
       socket.on("user_offline", (userId) => {
         setOnlineUsers((prev) => ({ ...prev, [userId]: false }));
       });
 
-      // ✅ 4. Demander l’état initial (important)
+      // Demander l’état initial (important)
       socket.emit("get_online_users");
 
       socket.on("online_users", (users) => {
